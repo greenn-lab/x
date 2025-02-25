@@ -1,32 +1,71 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { Injectable, Logger } from '@nestjs/common';
 
-import { Model } from 'mongoose';
-
-import { FindAllTemplateDto } from '@app/template/dto/find-all-template.dto';
-import {
-  Template,
-  TemplateDocument,
-} from '@app/template/schemas/template.schema';
-import { TemplateFilter } from '@app/types/template/template.type';
+import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import { Template } from '@app/template/schemas/template.schema';
+import { TemplateRepository } from '@app/template/template.repository';
+import { TemplateWithUsernames } from '@app/types/template/template.type';
+import { UserViewRepository } from '@app/user/repositories/user-view.repository';
 
 @Injectable()
 export class TemplateService {
+  private readonly logger = new Logger(TemplateService.name);
+
   constructor(
-    @InjectModel(Template.name) private templateModel: Model<TemplateDocument>,
+    private templateRepository: TemplateRepository,
+    private readonly userViewRepository: UserViewRepository,
   ) {}
 
-  //TODO mongoose 사용 예시로 작성함. 수정 필요.
-  async findAll(workspaceId: string, query: FindAllTemplateDto) {
-    const filter: TemplateFilter = {
-      workspaceId,
-      isDeleted: 'N',
-    };
+  // pid -> nickname으로 대체
+  async replacePIDsWithNicknames(
+    templates: Template[],
+  ): Promise<TemplateWithUsernames[]> {
+    // 	// 1. pid들 추출
+    const pidsSet = new Set<string>();
+    templates.forEach(({ creatorPID, editorPID }) => {
+      pidsSet.add(creatorPID);
+      if (editorPID !== creatorPID) {
+        pidsSet.add(editorPID);
+      }
+    });
 
-    if (query.search) {
-      filter.title = { $regex: query.search, $options: 'i' };
+    // 2. 사용자 정보 조회
+    const usersInfo = await this.userViewRepository.getUserNickNames(
+      Array.from(pidsSet),
+    );
+
+    const userMap = new Map(usersInfo.map((user) => [user.pid, user.nickName]));
+
+    // 3. 닉네임 매핑 (기본값 추가)
+    return templates.map(({ creatorPID, editorPID, ...templateData }) => ({
+      creator: userMap.get(creatorPID) ?? 'Unknown User',
+      editor: userMap.get(editorPID) ?? 'Unknown User',
+      ...templateData,
+    }));
+  }
+
+  async getTemplates(
+    workspaceId: string,
+    options: GetTemplatesDto,
+  ): Promise<{ _count: number; templates: TemplateWithUsernames[] }> {
+    try {
+      this.logger.log(`템플릿 조회를 시작합니다`);
+      const templatesInfo = await this.templateRepository.getTemplates(
+        workspaceId,
+        options,
+      );
+
+      const mappedTemplates = await this.replacePIDsWithNicknames(
+        templatesInfo.templates,
+      );
+
+      this.logger.log(`템플릿 조회를 완료했습니다`);
+      return {
+        _count: templatesInfo._count,
+        templates: mappedTemplates,
+      };
+    } catch (error) {
+      this.logger.error(`템플릿 조회 중 오류가 발생했습니다`);
+      throw error;
     }
-
-    return this.templateModel.find(filter).sort({ createAt: -1 }).exec();
   }
 }

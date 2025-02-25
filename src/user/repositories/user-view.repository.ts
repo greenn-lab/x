@@ -11,8 +11,7 @@ export class UserViewRepository extends Repository<UserView> {
   }
 
   async getUserNickNames(pids: string[]): Promise<UserView[]> {
-    console.log('getUserNickNames');
-    const users = await this.find({
+    return await this.find({
       where: {
         pid: In(pids), // $in 대신 In 사용
       },
@@ -21,8 +20,5 @@ export class UserViewRepository extends Repository<UserView> {
         pid: true,
       },
     });
-
-    console.log('users', users);
-    return users;
   }
 }
