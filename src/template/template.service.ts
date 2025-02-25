@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import { TemplateRepository } from '@app/template/repositories/template.repository';
 import { Template } from '@app/template/schemas/template.schema';
-import { TemplateRepository } from '@app/template/template.repository';
 import { TemplateWithUsernames } from '@app/types/template/template.type';
 import { UserViewRepository } from '@app/user/repositories/user-view.repository';
 

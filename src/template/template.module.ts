@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { TemplateRepository } from '@app/template/repositories/template.repository';
 import {
   TemplateModule as TemplateModuleSchema,
   TemplateModuleSchema as TemplateModuleSchemaFactory,
@@ -15,7 +16,6 @@ import {
   TemplateSchema,
 } from '@app/template/schemas/template.schema';
 import { TemplateController } from '@app/template/template.controller';
-import { TemplateRepository } from '@app/template/template.repository';
 import { TemplateService } from '@app/template/template.service';
 import { UserView } from '@app/user/entities/user-view.entity';
 import { User } from '@app/user/entities/user.entity';
