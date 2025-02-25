@@ -10,7 +10,7 @@ import { getRdbConfig } from '@app/config/rdb.config';
 import { validationSchema } from '@app/config/validation.config';
 import { LlmModule } from '@app/llm/llm.module';
 import { TemplateModule } from '@app/template/template.module';
-
+import { WorkspaceModule } from '@app/workspace/workspace.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +27,7 @@ import { TemplateModule } from '@app/template/template.module';
     }),
     LlmModule,
     TemplateModule,
+    WorkspaceModule,
   ],
   controllers: [],
   providers: [

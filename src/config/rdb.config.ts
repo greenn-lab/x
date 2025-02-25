@@ -6,6 +6,7 @@ import { Llm } from '@app/llm/entities/llm.entity';
 import { Member } from '@app/member/entities/member.entity';
 import { User } from '@app/user/entities/user.entity';
 import { MonthlyWorkspaceStats } from '@app/workspace/entities/monthly-workspace-stats.entity';
+import { WorkspaceConfig } from '@app/workspace/entities/workspace-config.entity';
 import { Workspace } from '@app/workspace/entities/workspace.entity';
 
 export const getRdbConfig = (
@@ -17,6 +18,14 @@ export const getRdbConfig = (
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_DATABASE'),
-  entities: [Llm, LlmVendor, Member, Workspace, User, MonthlyWorkspaceStats],
+  entities: [
+    Llm,
+    LlmVendor,
+    Member,
+    Workspace,
+    User,
+    MonthlyWorkspaceStats,
+    WorkspaceConfig,
+  ],
   synchronize: false,
 });
