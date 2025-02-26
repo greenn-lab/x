@@ -5,6 +5,7 @@ import { LlmVendor } from '@app/llm/entities/llm-vendor.entity';
 import { Llm } from '@app/llm/entities/llm.entity';
 import { Member } from '@app/member/entities/member.entity';
 import { UserProfile } from '@app/user/entities/user-profile.entity';
+import { UserView } from '@app/user/entities/user-view.entity';
 import { User } from '@app/user/entities/user.entity';
 import { MonthlyWorkspaceStats } from '@app/workspace/entities/monthly-workspace-stats.entity';
 import { Workspace } from '@app/workspace/entities/workspace.entity';
@@ -24,6 +25,7 @@ export const getRdbConfig = (
     Member,
     Workspace,
     User,
+    UserView,
     MonthlyWorkspaceStats,
     UserProfile,
   ],
