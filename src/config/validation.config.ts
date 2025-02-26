@@ -9,6 +9,6 @@ export const validationSchema = Joi.object({
   DB_USERNAME: Joi.string().required(),
   DB_PASSWORD: Joi.string().required(),
   DB_DATABASE: Joi.string().required(),
-  MONGODB_URI: Joi.string().required().default('mongodb://localhost:27017'),
-  MONGODB_DATABASE: Joi.string().required().default('your_database'),
+  MONGODB_URI: Joi.string().required(),
+  MONGODB_DATABASE: Joi.string().required(),
 });

@@ -27,9 +27,11 @@ export interface AuthenticatedRequest extends Request {
   auth: {
     isAuthorized: boolean;
     member: {
+      id?: string;
       role: MemberRole;
       workspace: {
         id: string;
+        domain?: string;
       };
     };
   };

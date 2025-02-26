@@ -1,14 +1,14 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
-import { LlmVendor } from '@app/llm/entities/llm-vendor.entity';
-import { Llm } from '@app/llm/entities/llm.entity';
 import { Invite } from '@app/member/entities/invite.entity';
 import { Member } from '@app/member/entities/member.entity';
+import { TranscribeEngine } from '@app/transcribe/entities/transcribe-engine.entity';
+import { UserConfig } from '@app/user/entities/user-config.entity';
 import { UserProfile } from '@app/user/entities/user-profile.entity';
 import { UserView } from '@app/user/entities/user-view.entity';
 import { User } from '@app/user/entities/user.entity';
-import { MonthlyWorkspaceStats } from '@app/workspace/entities/monthly-workspace-stats.entity';
+import { WorkspaceConfig } from '@app/workspace/entities/workspace-config.entity';
 import { Workspace } from '@app/workspace/entities/workspace.entity';
 
 export const getRdbConfig = (
@@ -20,15 +20,16 @@ export const getRdbConfig = (
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_DATABASE'),
+  autoLoadEntities: true,
   entities: [
-    Llm,
-    LlmVendor,
     Member,
     Workspace,
+    WorkspaceConfig,
+    TranscribeEngine,
     User,
     UserView,
-    MonthlyWorkspaceStats,
     UserProfile,
+    UserConfig,
     Invite,
   ],
   synchronize: false,

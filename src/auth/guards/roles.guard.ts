@@ -41,6 +41,7 @@ export class RolesGuard implements CanActivate {
           role: MemberRole.OWNER,
           workspace: {
             id: '0aacac42-5808-4e33-b2e5-5c07ec362618',
+            domain: 'timbel.net',
           },
         },
       };

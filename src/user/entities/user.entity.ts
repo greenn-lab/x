@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 
 import { Provider } from '@app/types/common/base.type';
+import { UserConfig } from '@app/user/entities/user-config.entity';
 import { UserProfile } from '@app/user/entities/user-profile.entity';
 
 @Entity('User')
@@ -47,4 +48,7 @@ export class User {
   @OneToOne(() => UserProfile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'pid' })
   profile: UserProfile;
+
+  @OneToOne(() => UserConfig, (config) => config.user)
+  config: UserConfig;
 }

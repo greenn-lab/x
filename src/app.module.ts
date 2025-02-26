@@ -10,6 +10,7 @@ import { getRdbConfig } from '@app/config/rdb.config';
 import { validationSchema } from '@app/config/validation.config';
 import { LlmModule } from '@app/llm/llm.module';
 import { MemberModule } from '@app/member/members.module';
+import { StatModule } from '@app/stat/stat.module';
 import { TemplateModule } from '@app/template/template.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { TemplateModule } from '@app/template/template.module';
     }),
     LlmModule,
     TemplateModule,
+    StatModule,
     MemberModule,
   ],
   controllers: [],

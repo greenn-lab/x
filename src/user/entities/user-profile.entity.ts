@@ -1,4 +1,13 @@
-import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  Index,
+  OneToOne,
+  PrimaryColumn,
+} from 'typeorm';
+
+import { User } from '@app/user/entities/user.entity';
 
 @Entity('UserProfile')
 export class UserProfile {
@@ -6,20 +15,16 @@ export class UserProfile {
   @Index('idx_pid')
   pid: string;
 
-  @Column()
-  @Index('idx_domain')
-  domain: string;
-
-  @Column()
+  @Column({ length: 128, nullable: true })
   name: string;
 
-  @Column()
+  @Column({ length: 128, unique: true })
   nickName: string;
 
-  @Column()
+  @Column({ length: 256, nullable: true, unique: true })
   email: string;
 
-  @Column()
+  @Column({ length: 512, default: '' })
   thumbnailUrl: string;
 
   @Column({
@@ -31,4 +36,8 @@ export class UserProfile {
 
   @Column({ type: 'datetime', precision: 3 })
   updateAt: Date;
+
+  @OneToOne(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'pid' })
+  user: User;
 }
