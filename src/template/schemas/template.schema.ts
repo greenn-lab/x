@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { HydratedDocument } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 import { YesNo } from '@app/types/common/base.type';
 import { Module } from '@app/types/template/template.type';
@@ -9,6 +10,9 @@ export type TemplateDocument = HydratedDocument<Template>;
 
 @Schema({ collection: 'Template', timestamps: true })
 export class Template {
+  @Prop({ default: uuidv4 })
+  _id: string;
+
   @Prop()
   workspaceId: string;
 
