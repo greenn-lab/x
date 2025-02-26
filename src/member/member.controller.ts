@@ -13,6 +13,7 @@ import { Roles } from '@app/common/decorators/roles.decorator';
 import { Workspace } from '@app/common/decorators/workspace.decorator';
 import { ResponseDto } from '@app/common/dto/response.dto';
 import { FindMemberDto } from '@app/member/dto/find-member.dto';
+import { InviteMemberDto } from '@app/member/dto/invite-member.dto';
 import { MemberService } from '@app/member/member.service';
 import { MemberRole } from '@app/types/common/base.type';
 
@@ -37,13 +38,19 @@ export class MemberController {
     return ResponseDto.success(await this.memberService.findOne(id));
   }
 
-  @Post('invite')
-  create(@Body() _: any) {
-    return 'No work ' + _;
-  }
-
   @Patch(':id')
   update(@Param('id') id: string) {
     return 'No work ' + id;
+  }
+
+  @Post('invite')
+  @Roles(MemberRole.OWNER)
+  async invite(
+    @Workspace() workspace: { id: string },
+    @Body() invitation: InviteMemberDto,
+  ) {
+    return ResponseDto.success(
+      await this.memberService.invite(workspace.id, invitation),
+    );
   }
 }

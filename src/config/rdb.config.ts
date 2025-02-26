@@ -3,6 +3,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 import { LlmVendor } from '@app/llm/entities/llm-vendor.entity';
 import { Llm } from '@app/llm/entities/llm.entity';
+import { Invite } from '@app/member/entities/invite.entity';
 import { Member } from '@app/member/entities/member.entity';
 import { UserProfile } from '@app/user/entities/user-profile.entity';
 import { UserView } from '@app/user/entities/user-view.entity';
@@ -28,6 +29,7 @@ export const getRdbConfig = (
     UserView,
     MonthlyWorkspaceStats,
     UserProfile,
+    Invite,
   ],
   synchronize: false,
 });
