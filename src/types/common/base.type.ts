@@ -35,3 +35,14 @@ export enum Summarizer {
   OPENAI = 'OPENAI',
   SLLM = 'SLLM',
 }
+
+export enum BookmarkKeys {
+  segments = 'segments',
+  speakerInfo = 'speakerInfo',
+  summaryTime = 'summaryTime',
+  topics = 'topics',
+  keywords = 'keywords',
+  summary = 'summary',
+  tasks = 'tasks',
+  issues = 'issues',
+}

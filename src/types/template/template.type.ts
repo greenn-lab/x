@@ -1,6 +1,6 @@
 import { Template } from '@app/template/schemas/template.schema';
 
-export interface SubModuleItems {
+export interface ModuleItem {
   index: number;
   type: string;
   value: string;
@@ -10,7 +10,7 @@ export interface Module {
   index: number;
   moduleKey: string;
   displayName?: string;
-  items: SubModuleItems[];
+  items: ModuleItem[];
 }
 
 export interface TemplateFilter {
