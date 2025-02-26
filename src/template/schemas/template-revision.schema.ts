@@ -7,7 +7,11 @@ import { Module } from '@app/types/template/template.type';
 
 export type TemplateRevisionDocument = HydratedDocument<TemplateRevision>;
 
-@Schema({ collection: 'TemplateRevision', timestamps: true })
+@Schema({
+  collection: 'TemplateRevision',
+  timestamps: false,
+  versionKey: false,
+})
 export class TemplateRevision {
   @Prop({ default: uuidv4 })
   templateId: string;
