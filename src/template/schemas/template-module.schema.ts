@@ -9,14 +9,11 @@ export type TemplateModuleDocument = HydratedDocument<TemplateModule>;
 
 @Schema({
   collection: 'TemplateModule',
-  timestamps: {
-    createdAt: 'createAt',
-    updatedAt: 'updateAt',
-  },
+  timestamps: false,
   versionKey: false,
 })
 export class TemplateModule {
-  @Prop({ default: uuidv4 })
+  @Prop({ default: () => uuidv4() })
   _id: string;
 
   @Prop()
