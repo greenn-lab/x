@@ -26,4 +26,12 @@ export class TemplateController {
     );
     return ResponseDto.success(result);
   }
+
+  @Get('module')
+  @Roles(MemberRole.OWNER)
+  @ApiOperation({ summary: 'Get module set for making template' })
+  async getTemplateModules(@Workspace() workspace: { id: string }) {
+    const result = await this.templateService.getTemplateModules(workspace.id);
+    return ResponseDto.success(result);
+  }
 }
