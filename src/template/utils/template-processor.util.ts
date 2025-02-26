@@ -1,10 +1,93 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 
-import { Module } from '@app/types/template/template.type';
+import { TemplateService } from '@app/template/template.service';
+import { Module, ModuleItem } from '@app/types/template/template.type';
 
 @Injectable()
 export class TemplateProcessorUtil {
-  constructor() {}
+  constructor(
+    @Inject(forwardRef(() => TemplateService))
+    private templateService: TemplateService,
+  ) {}
+
+  async checkTemplate(workspaceId: string, modules: Module[]) {
+    if (!Array.isArray(modules)) {
+      return false;
+    }
+
+    // 사용 가능한 모듈 키 검사
+    const moduleSet =
+      await this.templateService.getTemplateModules(workspaceId);
+    const usableModuleKeys = moduleSet.modules.map(
+      (module) => module.moduleKey,
+    );
+
+    const invalidModuleKeys = modules
+      .filter((module: Module) => !usableModuleKeys.includes(module.moduleKey))
+      .map((module: Module) => module.moduleKey);
+
+    if (invalidModuleKeys.length > 0) {
+      // throw new Error(1047, { invalidModuleKeys, usableModuleKeys });
+    }
+
+    return modules.every((module) => {
+      // 필수 필드 존재 확인
+      if (
+        module.index === null ||
+        module.moduleKey === null ||
+        module.items === null
+      ) {
+        // throw new Error(1047, { module });
+      }
+
+      // 타입 검사
+      if (typeof module !== 'object') throw new Error();
+      if (typeof module.index !== 'number') throw new Error();
+      if (typeof module.moduleKey !== 'string') throw new Error();
+      if (!Array.isArray(module.items)) throw new Error();
+
+      return module.items.every((item: ModuleItem) => {
+        // 필수 필드 확인
+        if (!item.type || (!item.value && item.value !== '')) {
+          throw new Error();
+        }
+        // 타입 검사
+        if (
+          typeof item.index !== 'number' ||
+          typeof item.type !== 'string' ||
+          typeof item.value !== 'string'
+        ) {
+          throw new Error();
+        }
+        // type 값 검증
+        if (item.type !== 'basic' && item.type !== 'loop') {
+          throw new Error();
+        }
+
+        return true;
+      });
+    });
+  }
+
+  processTemplateToText(modules: Module[]): string {
+    return modules
+      .map((module) => {
+        const basicItem = module.items[0];
+        if (module.items.length === 1 && basicItem.type === 'basic') {
+          return basicItem.value; // 기본 타입 문자열 반환
+        }
+        return module.items.find((item) => item.type === 'loop')?.value || ''; // 문자열 반환
+      }) // ["텍스트1", "", "텍스트2", "", "텍스트3"]
+      .filter(Boolean) // 빈 문자열 및 null 제거 -> ["텍스트1", "텍스트2", "텍스트3"]
+      .join('\n\n');
+  }
+
+  processTemplate(modules: Module[]) {
+    const filledTemplate: Module[] = structuredClone(modules);
+
+    return this.processTemplateToText(filledTemplate);
+  }
+
   // 템플릿 샘플 모듈 조립
   assembleSampleModules(): Module[] {
     const moduleConfig = {

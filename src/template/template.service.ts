@@ -1,12 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
 import { TemplateModuleRepository } from '@app/template/repositories/template-module.repository';
 import { TemplateRepository } from '@app/template/repositories/template.repository';
 import { TemplateModule } from '@app/template/schemas/template-module.schema';
 import { Template } from '@app/template/schemas/template.schema';
 import { TemplateProcessorUtil } from '@app/template/utils/template-processor.util';
-import { TemplateWithUsernames } from '@app/types/template/template.type';
+import { YesNo } from '@app/types/common/base.type';
+import {
+  Module,
+  TemplateWithUsernames,
+} from '@app/types/template/template.type';
 import { UserViewRepository } from '@app/user/repositories/user-view.repository';
 
 @Injectable()
@@ -16,8 +21,8 @@ export class TemplateService {
   constructor(
     private templateRepository: TemplateRepository,
     private templateModuleRepository: TemplateModuleRepository,
+    private templateProcessor: TemplateProcessorUtil,
     private readonly userViewRepository: UserViewRepository,
-    private readonly templateProcessor: TemplateProcessorUtil,
   ) {}
 
   // pid -> nickname으로 대체
@@ -96,6 +101,46 @@ export class TemplateService {
       return latestModules;
     } catch (error) {
       this.logger.error('템플릿 모듈셋 조회 중 에러', error);
+      throw error;
+    }
+  }
+
+  // 사용중인 템플릿 개수 조회(10개 초과 여부 체크)
+  async checkUsingTemplateCount(workspaceId: string) {
+    const usingTemplateCount =
+      await this.templateRepository.getUsingTemplateCount(workspaceId);
+
+    if (usingTemplateCount >= 10) {
+      throw new Error('사용중인 템플릿이 10개를 초과하여 등록할 수 없습니다.');
+    }
+  }
+
+  async createTemplate(dto: CreateTemplateDtoPlus): Promise<Template> {
+    try {
+      this.logger.log('템플릿 생성 시작');
+      const { template, workspaceId } = dto;
+      if (dto.isUsed === YesNo.Y) {
+        await this.checkUsingTemplateCount(workspaceId);
+      }
+
+      const checked = await this.templateProcessor.checkTemplate(
+        workspaceId,
+        template as Module[],
+      );
+
+      if (!checked) {
+        throw new Error('약속한 타임으로 구성하여 요청해주세요');
+      }
+
+      const preview = this.templateProcessor.processTemplate(
+        template as Module[],
+      );
+
+      const newDto = { ...dto, preview };
+      this.logger.log('템플릿 생성 완료');
+      return await this.templateRepository.createTemplate(newDto);
+    } catch (error) {
+      this.logger.error('템플릿 생성 중 에러', error);
       throw error;
     }
   }
