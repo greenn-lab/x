@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
 import { TemplateModuleRepository } from '@app/template/repositories/template-module.repository';
 import { TemplateRepository } from '@app/template/repositories/template.repository';
 import { Template } from '@app/template/schemas/template.schema';
@@ -168,6 +169,40 @@ export class TemplateService {
       }
     } catch (error) {
       this.logger.error('템플릿 상세 조회 중 에러', error);
+      throw error;
+    }
+  }
+
+  async updateTemplate(templateId: string, dto: UpdateTemplateDtoPlus) {
+    try {
+      this.logger.log('템플릿 수정 시작');
+      const { workspaceId, template } = dto;
+
+      const templateInfo = await this.templateRepository.getTemplateDetail(
+        workspaceId,
+        templateId,
+      );
+
+      if (!templateInfo) {
+        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+      }
+
+      dto.preview = this.templateProcessor.processTemplate(template);
+
+      const result = await this.templateRepository.updateTemplate(
+        templateId,
+        dto,
+      );
+
+      if (!result) {
+        throw new Error('템플릿 수정에 실패했습니다');
+      }
+
+      this.logger.log('템플릿 수정 완료');
+
+      return result;
+    } catch (error) {
+      this.logger.error('템플릿 수정 중 에러', error);
       throw error;
     }
   }
