@@ -46,3 +46,13 @@ export enum BookmarkKeys {
   tasks = 'tasks',
   issues = 'issues',
 }
+
+export interface MongoTransformingIdDto {
+  id: string;
+  [key: string]: any;
+}
+
+export interface MongoTransformingIdDocument {
+  _id: string;
+  [key: string]: any;
+}
