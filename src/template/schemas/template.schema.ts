@@ -3,18 +3,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
+import { applyCommonSchemaOptions } from '@app/common/utils/mongo-schema.util';
 import { YesNo } from '@app/types/common/base.type';
 import { Module } from '@app/types/template/template.type';
 
 export type TemplateDocument = HydratedDocument<Template>;
 
-@Schema({
-  collection: 'Template',
-  timestamps: false,
-  versionKey: false,
-})
+@Schema({ collection: 'Template' })
 export class Template {
-  @Prop({ default: uuidv4 })
+  @Prop({ default: () => uuidv4() })
   _id: string;
 
   @Prop()
@@ -54,4 +51,8 @@ export class Template {
   updateAt: Date;
 }
 
-export const TemplateSchema = SchemaFactory.createForClass(Template);
+const TemplateSchema = SchemaFactory.createForClass(Template);
+
+applyCommonSchemaOptions(TemplateSchema);
+
+export { TemplateSchema };
