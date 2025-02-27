@@ -1,14 +1,22 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { HydratedDocument } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 import { YesNo } from '@app/types/common/base.type';
 import { Module } from '@app/types/template/template.type';
 
 export type TemplateDocument = HydratedDocument<Template>;
 
-@Schema({ collection: 'Template', timestamps: true })
+@Schema({
+  collection: 'Template',
+  timestamps: false,
+  versionKey: false,
+})
 export class Template {
+  @Prop({ default: uuidv4 })
+  _id: string;
+
   @Prop()
   workspaceId: string;
 
@@ -19,7 +27,7 @@ export class Template {
   title: string;
 
   @Prop({ type: Array<Module> })
-  template: Module[];
+  template: Module[]; // 초기 설계시 변수명을 잘 못 지음. template -> modules라고 하는 게 더 적합할듯(but 당장은 프론트와 맞추기 위해 수정하지 않음)
 
   @Prop({ default: '' })
   description: string;

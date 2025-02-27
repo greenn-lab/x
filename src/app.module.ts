@@ -10,7 +10,7 @@ import { getRdbConfig } from '@app/config/rdb.config';
 import { validationSchema } from '@app/config/validation.config';
 import { LlmModule } from '@app/llm/llm.module';
 import { TemplateModule } from '@app/template/template.module';
-import { WorkspaceModule } from '@app/workspace/workspace.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,8 +25,6 @@ import { WorkspaceModule } from '@app/workspace/workspace.module';
       useFactory: getMongoConfig,
       inject: [ConfigService],
     }),
-    LlmModule,
-    TemplateModule,
     WorkspaceModule,
   ],
   controllers: [],
@@ -37,4 +35,13 @@ import { WorkspaceModule } from '@app/workspace/workspace.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  static async registerAsync(): Promise<DynamicModule> {
+    const featureModules = await ModuleLoader.loadModules();
+
+    return {
+      module: AppModule,
+      imports: featureModules,
+    };
+  }
+}

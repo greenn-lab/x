@@ -7,7 +7,12 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { MemberRole } from '@app/types/common/base.type';
+import {
+  Engine,
+  MemberRole,
+  Summarizer,
+  SupportLang,
+} from '@app/types/common/base.type';
 import { AuthenticatedRequest } from '@app/types/common/request.type';
 
 @Injectable()
@@ -36,10 +41,33 @@ export class RolesGuard implements CanActivate {
           role: MemberRole.OWNER,
           workspace: {
             id: '0aacac42-5808-4e33-b2e5-5c07ec362618',
+            domain: 'timbel.net',
           },
         },
       };
     }
+
+    if (!request.user) {
+      request.user = {
+        pid: '17d7e731-a23e-54d5-99ff-1397cbdf5e27',
+        email: 'test@test.com',
+        nickName: 'test',
+        thumbnailUrl: 'https://test.com/test.png',
+        isGuest: false,
+        config: {
+          lang: SupportLang.KO,
+          isPush: true,
+          summarizer: Summarizer.OPENAI,
+          transcribeEngine: Engine.CLOVA,
+          transcribeLang: SupportLang.KO,
+        },
+        iat: 1714204800,
+        exp: 1714204800,
+      };
+    }
+
+    console.log(request.user);
+    console.log(request.auth);
     ////////////////////////////
 
     const { auth } = request;
@@ -49,6 +77,7 @@ export class RolesGuard implements CanActivate {
     }
 
     const hasPermission = this.checkRole(requiredRole, auth.member.role);
+
     if (!hasPermission) {
       throw new ForbiddenException(
         'You do not have permission for this action',

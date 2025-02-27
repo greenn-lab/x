@@ -7,7 +7,6 @@ export class MonthlyWorkspaceStats {
   workspaceId: string;
 
   @ViewColumn()
-  @PrimaryColumn()
   domain: string;
 
   @ViewColumn()

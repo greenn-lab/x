@@ -17,7 +17,7 @@ WORKDIR /app
 COPY --from=builder /build/dist ./dist
 COPY --from=builder /build/package.json .
 COPY --from=builder /build/pnpm-lock.yaml .
-COPY --from=builder /build/.env .
+COPY .env .
 
 RUN npm install
 

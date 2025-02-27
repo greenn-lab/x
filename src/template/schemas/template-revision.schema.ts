@@ -1,14 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 import { HydratedDocument } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 import { Module } from '@app/types/template/template.type';
 
 export type TemplateRevisionDocument = HydratedDocument<TemplateRevision>;
 
-@Schema({ collection: 'TemplateRevision', timestamps: true })
+@Schema({
+  collection: 'TemplateRevision',
+  timestamps: false,
+  versionKey: false,
+})
 export class TemplateRevision {
-  @Prop()
+  @Prop({ default: uuidv4 })
   templateId: string;
 
   @Prop({ default: '' })

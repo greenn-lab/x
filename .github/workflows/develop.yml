@@ -1,0 +1,110 @@
+name: Timblo Back-office Backend
+
+on:
+  push:
+    branches: [ "develop" ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PROJECT_ID: timblo-bo-be
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 22.x ]
+        pnpm-version: [ 10 ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ matrix.pnpm-version }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # - name: Install dependencies
+      #  run: pnpm install --frozen-lockfile
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    environment: 'dev'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup environments
+        run: |
+          echo "DB_TYPE=${{ secrets.DB_DATATYPE }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOSTNAME }}" >> .env
+          echo "DB_PORT=${{ secrets.DB_HOSTPORT }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_DATABASE=${{ vars.DB_DATABASE }}" >> .env
+          echo "MONGO_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "MONGO_DATABASE=${{ vars.MONGODB_DATABASE }}" >> .env
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+#  deploy:
+#    needs: [ build ]
+#    runs-on: self-hosted
+#    steps:
+#      - name: Log in to the Container registry
+#        uses: docker/login-action@v2
+#        with:
+#          registry: ${{ env.REGISTRY }}
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Pull latest image
+#        run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+#
+#      - name: Stop existing container
+#        run: |
+#          IS_HEALTHY=$(docker inspect --format='{{.State.Health.Status}}' ${{ env.PROJECT_ID }})
+#
+#          echo "Service is... ${IS_HEALTHY}"
+#          docker rm -f ${{ env.PROJECT_ID }} || true
+#        continue-on-error: true
+#
+#      - name: Run container
+#        run: |
+#          docker run -d --name ${{ env.PROJECT_ID }} -p 3000:3000 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
