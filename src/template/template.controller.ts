@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -130,6 +131,21 @@ export class TemplateController {
       workspace.id,
       templateId,
       options,
+    );
+    return ResponseDto.success(result);
+  }
+
+  // 템플릿 삭제
+  @Delete(':templateId')
+  @Roles(MemberRole.OWNER)
+  @ApiOperation({ summary: 'Delete template' })
+  async deleteTemplate(
+    @Workspace() workspace: { id: string },
+    @Param('templateId') templateId: string,
+  ) {
+    const result = await this.templateService.deleteTemplate(
+      workspace.id,
+      templateId,
     );
     return ResponseDto.success(result);
   }

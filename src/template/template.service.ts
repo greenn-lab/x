@@ -240,7 +240,7 @@ export class TemplateService {
         throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
       }
 
-      if (templateInfo.isDelete === YesNo.Y) {
+      if (templateInfo.isDeleted === YesNo.Y) {
         throw new Error('삭제된 템플릿은 사용 여부 수정이 불가능합니다');
       }
 
@@ -258,6 +258,42 @@ export class TemplateService {
       return result;
     } catch (error) {
       this.logger.error('템플릿 사용 여부 수정 중 에러', error);
+      throw error;
+    }
+  }
+
+  // 템플릿 삭제
+  async deleteTemplate(workspaceId: string, templateId: string) {
+    try {
+      this.logger.log('템플릿 삭제 시작');
+
+      const templateInfo = await this.templateRepository.getTemplateDetail(
+        workspaceId,
+        templateId,
+      );
+
+      if (!templateInfo) {
+        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+      }
+
+      if (templateInfo.isDeleted === YesNo.Y) {
+        throw new Error('이미 삭제된 템플릿입니다');
+      }
+
+      const result = await this.templateRepository.updateTemplateStatus(
+        templateId,
+        { isDeleted: YesNo.Y },
+      );
+
+      if (!result) {
+        throw new Error('템플릿 삭제에 실패했습니다');
+      }
+
+      this.logger.log('템플릿 삭제 완료');
+
+      return result;
+    } catch (error) {
+      this.logger.error('템플릿 삭제 중 에러', error);
       throw error;
     }
   }
