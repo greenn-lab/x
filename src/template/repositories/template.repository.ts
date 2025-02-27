@@ -3,6 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { Model } from 'mongoose';
 
+import {
+  transformMongoDocument,
+  transformMongoDocuments,
+} from '@app/common/utils/transform-mongo.util';
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
 import { TemplateRevision } from '@app/template/schemas/template-revision.schema';
@@ -25,7 +29,7 @@ export class TemplateRepository {
   async getTemplates(
     workspaceId: string,
     options: GetTemplatesDto,
-  ): Promise<{ _count: number; templates: Template[] }> {
+  ): Promise<{ _count: number; templates }> {
     const query = { workspaceId };
 
     if (options.isUsed) {
@@ -35,25 +39,21 @@ export class TemplateRepository {
       query['isDeleted'] = options.isDeleted;
     }
 
-    const [templates, _count] = await Promise.all([
-      this.template
-        .find(query)
-        .lean()
-        .sort({ isUsed: -1, updatedAt: -1 })
-        .exec(),
+    const [templatesResult, _count] = await Promise.all([
+      this.template.find(query).sort({ isUsed: -1, updatedAt: -1 }).lean(),
       this.template.countDocuments(query),
     ]);
 
-    return {
-      _count,
-      templates,
-    };
+    const templates = transformMongoDocuments(templatesResult);
+
+    return { _count, templates };
   }
+
   // 템플릿 생성
   async createTemplate(data: CreateTemplateDtoPlus): Promise<Template> {
     const session = await this.template.startSession();
     try {
-      const templateDoc = await session.withTransaction(async () => {
+      const templateDoc: Template = await session.withTransaction(async () => {
         const newTemplate = new this.template({ ...data });
 
         if (!newTemplate) {
@@ -80,5 +80,22 @@ export class TemplateRepository {
     } finally {
       await session.endSession();
     }
+  }
+
+  // 템플릿 상세 조회
+  async getTemplate(workspaceId: string, templateId: string) {
+    const template = await this.template
+      .findOne({
+        workspaceId,
+        _id: templateId,
+      })
+      .lean()
+      .exec();
+
+    if (!template) {
+      return null;
+    }
+
+    return transformMongoDocument(template);
   }
 }

@@ -59,20 +59,16 @@ export class TemplateService {
   ): Promise<{ _count: number; templates: TemplateWithUsernames[] }> {
     try {
       this.logger.log(`템플릿 조회를 시작합니다`);
-      const templatesInfo = await this.templateRepository.getTemplates(
-        workspaceId,
-        options,
-      );
+      const templatesInfo: {
+        _count: number;
+        templates: Template[];
+      } = await this.templateRepository.getTemplates(workspaceId, options);
 
-      const mappedTemplates = await this.replacePIDsWithNicknames(
-        templatesInfo.templates,
-      );
+      const { templates, _count } = templatesInfo;
+      const mappedTemplates = await this.replacePIDsWithNicknames(templates);
 
       this.logger.log(`템플릿 조회를 완료했습니다`);
-      return {
-        _count: templatesInfo._count,
-        templates: mappedTemplates,
-      };
+      return { _count, templates: mappedTemplates };
     } catch (error) {
       this.logger.error(`템플릿 조회 중 오류가 발생했습니다`);
       throw error;
@@ -141,6 +137,43 @@ export class TemplateService {
       return await this.templateRepository.createTemplate(newDto);
     } catch (error) {
       this.logger.error('템플릿 생성 중 에러', error);
+      throw error;
+    }
+  }
+
+  // 템플릿 상세 조회
+  async getTemplateDetail(
+    workspaceId: string,
+    templateId: string,
+    isModules: YesNo,
+  ) {
+    try {
+      this.logger.log('템플릿 상세 조회 시작');
+      const templateInfo = await this.templateRepository.getTemplate(
+        workspaceId,
+        templateId,
+      );
+
+      if (!templateInfo) {
+        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+      }
+
+      // const mappedTemplate = await this.replacePIDsWithNicknames(templateInfo);
+
+      // const result = {
+      //   ...mappedTemplate[0],
+      //   modules: templateInfo.template,
+      // };
+
+      if (isModules === YesNo.Y) {
+        const modules =
+          await this.templateModuleRepository.getTemplateModules(workspaceId);
+        return { ...templateInfo, modules: modules?.modules };
+      } else {
+        return templateInfo;
+      }
+    } catch (error) {
+      this.logger.error('템플릿 상세 조회 중 에러', error);
       throw error;
     }
   }
