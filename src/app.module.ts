@@ -4,6 +4,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { AuthGuard } from '@app/auth/guards/auth.guard';
+import { MemberGuard } from '@app/auth/guards/member.guard';
 import { RolesGuard } from '@app/auth/guards/roles.guard';
 import { ModuleLoader } from '@app/common/utils/module-loader.util';
 import { getMongoConfig } from '@app/config/mongo.config';
@@ -27,6 +29,14 @@ import { validationSchema } from '@app/config/validation.config';
   ],
   controllers: [],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: MemberGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
