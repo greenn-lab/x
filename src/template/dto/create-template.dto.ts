@@ -41,5 +41,4 @@ export interface CreateTemplateDtoPlus extends CreateTemplateDto {
   workspaceId: string;
   creatorPID: string;
   editorPID: string;
-  preview?: string;
 }
