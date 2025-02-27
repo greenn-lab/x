@@ -7,11 +7,7 @@ import { Module } from '@app/types/template/template.type';
 
 export type TemplateModuleDocument = HydratedDocument<TemplateModule>;
 
-@Schema({
-  collection: 'TemplateModule',
-  timestamps: false,
-  versionKey: false,
-})
+@Schema({ collection: 'TemplateModule', versionKey: false, timestamps: false })
 export class TemplateModule {
   @Prop({ default: () => uuidv4() })
   _id: string;
@@ -29,5 +25,6 @@ export class TemplateModule {
   updateAt: Date;
 }
 
-export const TemplateModuleSchema =
-  SchemaFactory.createForClass(TemplateModule);
+const TemplateModuleSchema = SchemaFactory.createForClass(TemplateModule);
+
+export { TemplateModuleSchema };

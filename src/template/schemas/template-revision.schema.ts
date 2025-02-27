@@ -9,10 +9,13 @@ export type TemplateRevisionDocument = HydratedDocument<TemplateRevision>;
 
 @Schema({
   collection: 'TemplateRevision',
-  timestamps: false,
   versionKey: false,
+  timestamps: false,
 })
 export class TemplateRevision {
+  @Prop({ default: () => uuidv4() })
+  _id: string;
+
   @Prop({ default: uuidv4 })
   templateId: string;
 
@@ -35,5 +38,6 @@ export class TemplateRevision {
   createAt: Date;
 }
 
-export const TemplateRevisionSchema =
-  SchemaFactory.createForClass(TemplateRevision);
+const TemplateRevisionSchema = SchemaFactory.createForClass(TemplateRevision);
+
+export { TemplateRevisionSchema };

@@ -10,18 +10,17 @@ import { Module } from '@app/types/template/template.type';
 export class TemplateModuleRepository {
   constructor(
     @InjectModel(TemplateModule.name)
-    private templateModuleModel: Model<TemplateModule>,
+    private templateModule: Model<TemplateModule>,
   ) {}
 
   // 템플릿 모듈 조회
   async getTemplateModules(
     workspaceId: string,
   ): Promise<TemplateModule | null> {
-    return await this.templateModuleModel
+    return await this.templateModule
       .findOne({ workspaceId })
-      .select({ __v: 0 })
-      .sort({ createdAt: -1 })
-      .exec();
+      .sort({ createAt: -1 });
+    // .lean() 을 쓰면 _id 가 무조건 나옴
   }
 
   // 템플릿 모듈 생성
@@ -29,6 +28,6 @@ export class TemplateModuleRepository {
     workspaceId: string;
     modules: Module[];
   }): Promise<TemplateModule> {
-    return await this.templateModuleModel.create(data);
+    return await this.templateModule.create(data);
   }
 }
