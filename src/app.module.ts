@@ -1,17 +1,14 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { RolesGuard } from '@app/auth/guards/roles.guard';
+import { ModuleLoader } from '@app/common/utils/module-loader.util';
 import { getMongoConfig } from '@app/config/mongo.config';
 import { getRdbConfig } from '@app/config/rdb.config';
 import { validationSchema } from '@app/config/validation.config';
-import { LlmModule } from '@app/llm/llm.module';
-import { MemberModule } from '@app/member/members.module';
-import { StatModule } from '@app/stat/stat.module';
-import { TemplateModule } from '@app/template/template.module';
 
 @Module({
   imports: [
@@ -27,10 +24,6 @@ import { TemplateModule } from '@app/template/template.module';
       useFactory: getMongoConfig,
       inject: [ConfigService],
     }),
-    LlmModule,
-    TemplateModule,
-    StatModule,
-    MemberModule,
   ],
   controllers: [],
   providers: [
@@ -40,4 +33,13 @@ import { TemplateModule } from '@app/template/template.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  static async registerAsync(): Promise<DynamicModule> {
+    const featureModules = await ModuleLoader.loadModules();
+
+    return {
+      module: AppModule,
+      imports: featureModules,
+    };
+  }
+}

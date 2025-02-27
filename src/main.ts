@@ -10,7 +10,7 @@ import { HttpExceptionFilter } from '@app/common/filters/http-exception.filter';
 import { createWinstonConfig } from '@app/config/winston.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(await AppModule.registerAsync());
   const configService = app.get(ConfigService);
 
   app.useLogger(
