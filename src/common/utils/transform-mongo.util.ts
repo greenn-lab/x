@@ -7,7 +7,7 @@ export function transformMongoDocument<T extends MongoTransformingIdDocument>(
   doc: T,
 ): MongoTransformingIdDto {
   const { _id, ...rest } = doc;
-  return { id: String(_id), ...rest };
+  return { id: _id.toString(), ...rest };
 }
 
 export function transformMongoDocuments<T extends MongoTransformingIdDocument>(
