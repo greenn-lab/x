@@ -2,6 +2,7 @@ import { HttpException, Injectable, Logger } from '@nestjs/common';
 
 import { FindMemberDto } from '@app/member/dto/find-member.dto';
 import { InviteMemberDto } from '@app/member/dto/invite-member.dto';
+import { UpdateMemberDto } from '@app/member/dto/update-member.dto';
 import { InviteRepository } from '@app/member/repositories/invite.repository';
 import { MemberRepository } from '@app/member/repositories/member.repository';
 
@@ -34,6 +35,7 @@ export class MemberService {
       throw new HttpException('이미 초대된 이메일 입니다.', 500);
     }
 
+    // noinspection UnnecessaryLocalVariableJS
     const invited = await this.inviteRepository.createInvite({
       workspaceId,
       email,
@@ -45,6 +47,10 @@ export class MemberService {
     // TODO notification
 
     return invited;
+  }
+
+  async update(id: string, member: UpdateMemberDto) {
+    return await this.memberRepository.save({ id, role: member.role });
   }
 
   private getExpireDateAfter7Days() {
