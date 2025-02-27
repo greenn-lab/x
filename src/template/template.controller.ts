@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -21,6 +22,7 @@ import {
 } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
 import {
+  OptionsDto,
   UpdateTemplateDto,
   UpdateTemplateDtoPlus,
 } from '@app/template/dto/update-template.dto';
@@ -112,6 +114,23 @@ export class TemplateController {
     };
     const result = await this.templateService.updateTemplate(templateId, dto);
 
+    return ResponseDto.success(result);
+  }
+
+  // 템플릿 사용 상태
+  @Patch(':templateId/status')
+  @Roles(MemberRole.OWNER)
+  @ApiOperation({ summary: 'Update template status' })
+  async updateTemplateStatus(
+    @Workspace() workspace: { id: string },
+    @Param('templateId') templateId: string,
+    @Query() options: OptionsDto,
+  ) {
+    const result = await this.templateService.updateTemplateStatus(
+      workspace.id,
+      templateId,
+      options,
+    );
     return ResponseDto.success(result);
   }
 }

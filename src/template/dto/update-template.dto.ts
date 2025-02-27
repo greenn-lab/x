@@ -36,3 +36,15 @@ export interface UpdateTemplateDtoPlus extends UpdateTemplateDto {
   editorPID: string;
   preview?: string;
 }
+
+export class OptionsDto {
+  @ApiPropertyOptional({ description: '사용 여부', default: 'N' })
+  @IsOptional({ message: '사용 여부는 문자열로 입력해주세요.' })
+  @IsString()
+  isUsed?: string = 'N';
+
+  @ApiPropertyOptional({ description: '삭제 여부', default: 'N' })
+  @IsOptional({ message: '삭제 여부는 문자열로 입력해주세요.' })
+  @IsString()
+  isDeleted?: string = 'N';
+}

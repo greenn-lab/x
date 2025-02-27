@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
-import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
+import {
+  OptionsDto,
+  UpdateTemplateDtoPlus,
+} from '@app/template/dto/update-template.dto';
 import { TemplateModuleRepository } from '@app/template/repositories/template-module.repository';
 import { TemplateRepository } from '@app/template/repositories/template.repository';
 import { Template } from '@app/template/schemas/template.schema';
@@ -101,11 +104,18 @@ export class TemplateService {
 
   // 사용중인 템플릿 개수 조회(10개 초과 여부 체크)
   async checkUsingTemplateCount(workspaceId: string) {
-    const usingTemplateCount =
-      await this.templateRepository.getUsingTemplateCount(workspaceId);
+    try {
+      const usingTemplateCount =
+        await this.templateRepository.getUsingTemplateCount(workspaceId);
 
-    if (usingTemplateCount >= 10) {
-      throw new Error('사용중인 템플릿이 10개를 초과하여 등록할 수 없습니다.');
+      if (usingTemplateCount >= 10) {
+        throw new Error(
+          '사용중인 템플릿이 10개를 초과하여 등록할 수 없습니다.',
+        );
+      }
+    } catch (error) {
+      this.logger.error('사용 중인 템플릿 개수 조회 중 에러', error);
+      throw error;
     }
   }
 
@@ -173,6 +183,7 @@ export class TemplateService {
     }
   }
 
+  // 템플릿 수정
   async updateTemplate(templateId: string, dto: UpdateTemplateDtoPlus) {
     try {
       this.logger.log('템플릿 수정 시작');
@@ -203,6 +214,50 @@ export class TemplateService {
       return result;
     } catch (error) {
       this.logger.error('템플릿 수정 중 에러', error);
+      throw error;
+    }
+  }
+
+  // 템플릿 사용 여부 수정
+  async updateTemplateStatus(
+    workspaceId: string,
+    templateId: string,
+    options: OptionsDto,
+  ) {
+    try {
+      this.logger.log('템플릿 사용 여부 수정 시작');
+
+      if (options.isUsed === YesNo.Y) {
+        await this.checkUsingTemplateCount(workspaceId);
+      }
+
+      const templateInfo = await this.templateRepository.getTemplateDetail(
+        workspaceId,
+        templateId,
+      );
+
+      if (!templateInfo) {
+        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+      }
+
+      if (templateInfo.isDelete === YesNo.Y) {
+        throw new Error('삭제된 템플릿은 사용 여부 수정이 불가능합니다');
+      }
+
+      const result = await this.templateRepository.updateTemplateStatus(
+        templateId,
+        options,
+      );
+
+      if (!result) {
+        throw new Error('템플릿 사용 여부 수정에 실패했습니다');
+      }
+
+      this.logger.log('템플릿 사용 여부 수정 완료');
+
+      return result;
+    } catch (error) {
+      this.logger.error('템플릿 사용 여부 수정 중 에러', error);
       throw error;
     }
   }

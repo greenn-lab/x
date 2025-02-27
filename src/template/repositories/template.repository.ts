@@ -9,9 +9,13 @@ import {
 } from '@app/common/utils/transform-mongo.util';
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
-import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
+import {
+  OptionsDto,
+  UpdateTemplateDtoPlus,
+} from '@app/template/dto/update-template.dto';
 import { TemplateRevision } from '@app/template/schemas/template-revision.schema';
 import { Template } from '@app/template/schemas/template.schema';
+import { YesNo } from '@app/types/common/base.type';
 
 @Injectable()
 export class TemplateRepository {
@@ -149,5 +153,23 @@ export class TemplateRepository {
       }
       throw new Error('알 수 없는 오류가 발생했습니다');
     }
+  }
+
+  // 템플릿 사용 여부 수정
+  async updateTemplateStatus(templateId: string, options: OptionsDto) {
+    const { isUsed, isDeleted } = options;
+    const data: Record<string, YesNo> = {};
+    if (isUsed) {
+      data['isUsed'] = isUsed as YesNo;
+    }
+    if (isDeleted) {
+      data['isDeleted'] = isDeleted as YesNo;
+    }
+
+    const result = await this.template
+      .findOneAndUpdate({ _id: templateId }, { $set: data }, { new: true })
+      .lean();
+
+    return result ? transformMongoDocument(result) : null;
   }
 }
