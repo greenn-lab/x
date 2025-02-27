@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
 import { TemplateModuleRepository } from '@app/template/repositories/template-module.repository';
 import { TemplateRepository } from '@app/template/repositories/template.repository';
-import { TemplateModule } from '@app/template/schemas/template-module.schema';
 import { Template } from '@app/template/schemas/template.schema';
 import { TemplateProcessorUtil } from '@app/template/utils/template-processor.util';
 import { YesNo } from '@app/types/common/base.type';
@@ -26,9 +26,7 @@ export class TemplateService {
   ) {}
 
   // pid -> nickname으로 대체
-  async replacePIDsWithNicknames(
-    templates: Template[],
-  ): Promise<TemplateWithUsernames[]> {
+  async replacePIDsWithNicknames(templates: Template[]) {
     // 	// 1. pid들 추출
     const pidsSet = new Set<string>();
     templates.forEach(({ creatorPID, editorPID }) => {
@@ -76,7 +74,7 @@ export class TemplateService {
   }
 
   //사용가능한 템플릿 모듈셋 조회
-  async getTemplateModules(workspaceId: string): Promise<TemplateModule> {
+  async getTemplateModules(workspaceId: string) {
     try {
       this.logger.log('템플릿 모듈셋 조회 시작');
       const latestModules =
@@ -149,7 +147,7 @@ export class TemplateService {
   ) {
     try {
       this.logger.log('템플릿 상세 조회 시작');
-      const templateInfo = await this.templateRepository.getTemplate(
+      const templateInfo = await this.templateRepository.getTemplateDetail(
         workspaceId,
         templateId,
       );
@@ -158,22 +156,53 @@ export class TemplateService {
         throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
       }
 
-      // const mappedTemplate = await this.replacePIDsWithNicknames(templateInfo);
-
-      // const result = {
-      //   ...mappedTemplate[0],
-      //   modules: templateInfo.template,
-      // };
+      const [result] = await this.replacePIDsWithNicknames([
+        templateInfo,
+      ] as unknown as Template[]);
 
       if (isModules === YesNo.Y) {
         const modules =
           await this.templateModuleRepository.getTemplateModules(workspaceId);
-        return { ...templateInfo, modules: modules?.modules };
+        return { ...templateInfo, modules: modules?.modules as Module[] };
       } else {
-        return templateInfo;
+        return result;
       }
     } catch (error) {
       this.logger.error('템플릿 상세 조회 중 에러', error);
+      throw error;
+    }
+  }
+
+  async updateTemplate(templateId: string, dto: UpdateTemplateDtoPlus) {
+    try {
+      this.logger.log('템플릿 수정 시작');
+      const { workspaceId, template } = dto;
+
+      const templateInfo = await this.templateRepository.getTemplateDetail(
+        workspaceId,
+        templateId,
+      );
+
+      if (!templateInfo) {
+        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+      }
+
+      dto.preview = this.templateProcessor.processTemplate(template);
+
+      const result = await this.templateRepository.updateTemplate(
+        templateId,
+        dto,
+      );
+
+      if (!result) {
+        throw new Error('템플릿 수정에 실패했습니다');
+      }
+
+      this.logger.log('템플릿 수정 완료');
+
+      return result;
+    } catch (error) {
+      this.logger.error('템플릿 수정 중 에러', error);
       throw error;
     }
   }

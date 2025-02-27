@@ -2,9 +2,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 
-import { YesNo } from '@app/types/common/base.type';
-
-export class CreateTemplateDto {
+import { Module } from '@app/types/template/template.type';
+export class UpdateTemplateDto {
   @ApiPropertyOptional({ description: '버전 정보' })
   @IsOptional()
   @IsString()
@@ -24,12 +23,7 @@ export class CreateTemplateDto {
   })
   @IsArray()
   @IsObject({ each: true })
-  template: object[];
-
-  @ApiPropertyOptional({ description: '사용 여부', default: YesNo.N })
-  @IsOptional()
-  @IsString()
-  isUsed?: YesNo = YesNo.N;
+  template: Module[];
 
   @ApiPropertyOptional({ description: '설명' })
   @IsOptional()
@@ -37,8 +31,8 @@ export class CreateTemplateDto {
   description?: string;
 }
 
-export interface CreateTemplateDtoPlus extends CreateTemplateDto {
+export interface UpdateTemplateDtoPlus extends UpdateTemplateDto {
   workspaceId: string;
-  creatorPID: string;
   editorPID: string;
+  preview?: string;
 }

@@ -9,6 +9,7 @@ import {
 } from '@app/common/utils/transform-mongo.util';
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
 import { TemplateRevision } from '@app/template/schemas/template-revision.schema';
 import { Template } from '@app/template/schemas/template.schema';
 
@@ -83,7 +84,7 @@ export class TemplateRepository {
   }
 
   // 템플릿 상세 조회
-  async getTemplate(workspaceId: string, templateId: string) {
+  async getTemplateDetail(workspaceId: string, templateId: string) {
     const template = await this.template
       .findOne({
         workspaceId,
@@ -97,5 +98,56 @@ export class TemplateRepository {
     }
 
     return transformMongoDocument(template);
+  }
+
+  // 템플릿 수정
+  async updateTemplate(templateId: string, dto: UpdateTemplateDtoPlus) {
+    const { preview, ...updateData } = dto;
+    const session = await this.template.startSession();
+
+    try {
+      let updatedTemplate: Template | null = null;
+
+      await session.withTransaction(async () => {
+        // findOneAndUpdate를 사용하여 템플릿 업데이트
+        updatedTemplate = await this.template
+          .findOneAndUpdate(
+            { _id: templateId },
+            { $set: { ...updateData, preview } },
+            { new: true, session },
+          )
+          .lean();
+
+        if (!updatedTemplate) {
+          throw new Error(`템플릿 ID ${templateId}를 찾을 수 없습니다.`);
+        }
+
+        // 새 리비전 생성
+        const newRevision = new this.templateRevision({
+          ...updateData,
+          templateId,
+        });
+
+        await newRevision.save({ session });
+      });
+
+      // 세션 종료 후 변환된 문서 반환
+      await session.endSession();
+
+      if (!updatedTemplate) {
+        throw new Error(`수정에 실패하였습니다`);
+      }
+
+      console.log('updatedTemplate', updatedTemplate);
+
+      return transformMongoDocument(updatedTemplate);
+    } catch (error) {
+      console.error('템플릿 업데이트 중 오류 발생:', error);
+      await session.endSession();
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('알 수 없는 오류가 발생했습니다');
+    }
   }
 }

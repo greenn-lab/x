@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Query,
   // UseInterceptors,
 } from '@nestjs/common';
@@ -19,6 +20,10 @@ import {
   CreateTemplateDtoPlus,
 } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import {
+  UpdateTemplateDto,
+  UpdateTemplateDtoPlus,
+} from '@app/template/dto/update-template.dto';
 import { TemplateService } from '@app/template/template.service';
 import { MemberRole, YesNo } from '@app/types/common/base.type';
 import { TemplateWithUsernames } from '@app/types/template/template.type';
@@ -88,6 +93,25 @@ export class TemplateController {
       templateId,
       isModules,
     );
+    return ResponseDto.success(result);
+  }
+
+  @Put(':templateId')
+  @Roles(MemberRole.OWNER)
+  @ApiOperation({ summary: 'Update template' })
+  async updateTemplate(
+    @Workspace() workspace: { id: string },
+    @Param('templateId') templateId: string,
+    @User() user: { pid: string },
+    @Body() body: UpdateTemplateDto,
+  ) {
+    const dto: UpdateTemplateDtoPlus = {
+      ...body,
+      workspaceId: workspace.id,
+      editorPID: user.pid,
+    };
+    const result = await this.templateService.updateTemplate(templateId, dto);
+
     return ResponseDto.success(result);
   }
 }
