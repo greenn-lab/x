@@ -9,3 +9,9 @@ export interface PaginatedResponseType<T> {
   totalPage: number;
   items: T[];
 }
+
+export interface ErrorResponse<T> {
+  httpCode: number;
+  message: string;
+  result: T;
+}

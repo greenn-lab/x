@@ -22,11 +22,4 @@ export class ResponseDto<T> implements BaseResponseType<T> {
   ): ResponseDto<T> {
     return new ResponseDto(message, httpCode, data);
   }
-
-  static error(
-    message: string = ResponseMessage.BAD_REQUEST,
-    httpCode = HttpStatusCode.BAD_REQUEST,
-  ): ResponseDto<null> {
-    return new ResponseDto(message, httpCode, null);
-  }
 }

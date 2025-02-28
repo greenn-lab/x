@@ -18,7 +18,7 @@ import { UpdateMemberDto } from '@app/member/dto/update-member.dto';
 import { MemberService } from '@app/member/member.service';
 import { MemberRole } from '@app/types/common/base.type';
 
-@Controller('members')
+@Controller('member')
 export class MemberController {
   constructor(private readonly memberService: MemberService) {}
 
@@ -35,6 +35,11 @@ export class MemberController {
   }
 
   @Get(':id')
+  @ApiParam({
+    name: 'id',
+    description: '회원 ID',
+    example: '00000000-0000-0000-0000-000000000000',
+  })
   async findOne(@Param('id') id: string) {
     return ResponseDto.success(await this.memberService.findOne(id));
   }

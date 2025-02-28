@@ -1,0 +1,11 @@
+{
+    "welcome": "Welcome!",
+    "messages": {
+        "success": "Successfully processed.",
+        "created": "Successfully created.",
+        "updated": "Successfully updated.",
+        "deleted": "Successfully deleted.",
+        "loading": "Loading...",
+        "confirmDelete": "Are you sure you want to delete this?"
+    }
+}

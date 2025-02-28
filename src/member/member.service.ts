@@ -28,11 +28,11 @@ export class MemberService {
     const member = await this.memberRepository.findByEmail(email);
 
     if (member && member.workspace.domain !== 'global') {
-      throw new HttpException('다른 워크스페이스에 가입된 사용자 입니다.', 501);
+      throw new HttpException('1016', 501);
     }
 
     if (await this.inviteRepository.findOneBy({ email })) {
-      throw new HttpException('이미 초대된 이메일 입니다.', 500);
+      throw new HttpException('1017', 500);
     }
 
     // noinspection UnnecessaryLocalVariableJS

@@ -1,4 +1,4 @@
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,7 +6,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WinstonModule } from 'nest-winston';
 
 import { AppModule } from '@app/app.module';
-import { HttpExceptionFilter } from '@app/common/filters/http-exception.filter';
 import { createWinstonConfig } from '@app/config/winston.config';
 
 async function bootstrap() {
@@ -23,11 +22,19 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('문서 제목')
-    .setDescription('문서 설명')
+    .setTitle(configService.get('PROJECT_TITLE', 'Project'))
+    .setDescription(configService.get('PROJECT_DESCRIPTION', ''))
     .setVersion('1.0')
-    .addBearerAuth()
-    .addBasicAuth()
+    .addSecurityRequirements('x-timblo-token')
+    .addApiKey(
+      {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-timblo-token',
+        description: '암호를 말하라🤨',
+      },
+      'x-timblo-token',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -40,7 +47,6 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
 
   await app.listen(process.env.PORT ?? 3000);
 }
