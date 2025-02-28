@@ -4,7 +4,7 @@ import { HydratedDocument } from 'mongoose';
 
 export type LogDocument = HydratedDocument<Log>;
 
-interface logTransaction {
+export interface logTransaction {
   data: string;
   message: string;
 }

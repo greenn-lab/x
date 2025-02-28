@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { Model } from 'mongoose';
 
+import { CreateLogDto } from '@app/log/dto/create-log';
 import { Log } from '@app/log/schemas/log.schema';
 
 @Injectable()
@@ -17,11 +18,7 @@ export class LogService {
   /**
    * 클라이언트 에러 로그 생성
    */
-  async createClientErrorLog(errorLogs: {
-    email: string;
-    group: string;
-    transaction: any[];
-  }): Promise<Log> {
+  async createClientErrorLog(errorLogs: CreateLogDto): Promise<Log> {
     try {
       this.logger.log('클라이언트 로그 생성 시작');
       const newLog = new this.logRepository(errorLogs);
