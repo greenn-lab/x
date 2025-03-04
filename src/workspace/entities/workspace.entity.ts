@@ -4,7 +4,8 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
   OneToOne,
 } from 'typeorm';
 
@@ -13,7 +14,7 @@ import { WorkspaceConfig } from '@app/workspace/entities/workspace-config.entity
 
 @Entity('Workspace')
 export class Workspace {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
   @Index('idx_workspaceId')
   id: string;
 
@@ -42,7 +43,7 @@ export class Workspace {
   })
   createAt: Date;
 
-  @Column({ type: 'datetime', precision: 3 })
+  @UpdateDateColumn({ type: 'datetime', precision: 3 })
   updateAt: Date;
 
   @Column({ length: 128, default: '' })
@@ -51,6 +52,8 @@ export class Workspace {
   @Column({ length: 2048, default: '' })
   description: string;
 
-  @OneToOne(() => WorkspaceConfig, (config) => config.workspace)
+  @OneToOne(() => WorkspaceConfig, (config) => config.workspace, {
+    cascade: true,
+  })
   config: WorkspaceConfig;
 }

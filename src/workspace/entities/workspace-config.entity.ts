@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToOne,
@@ -12,7 +13,8 @@ import { Workspace } from '@app/workspace/entities/workspace.entity';
 
 @Entity('WorkspaceConfig')
 export class WorkspaceConfig {
-  @PrimaryColumn({ type: 'varchar', length: 191 })
+  @PrimaryColumn()
+  @Index('idx_workspaceId')
   workspaceId: string;
 
   @OneToOne(() => Workspace, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
