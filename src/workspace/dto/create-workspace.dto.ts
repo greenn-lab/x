@@ -28,9 +28,4 @@ export class CreateWorkspaceDto extends WorkspaceValidationDto {
     required: false,
   })
   file?: Express.Multer.File;
-
-  @IsOptional()
-  @IsString()
-  @ApiProperty({ description: '파일 업로드 토큰', required: false })
-  token?: string;
 }

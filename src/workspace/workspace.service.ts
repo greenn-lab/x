@@ -42,12 +42,14 @@ export class WorkspaceService {
     pid: string,
     body: CreateWorkspaceDto,
     file: Express.Multer.File,
+    token: string,
   ) {
     this.logger.debug(`Creating workspace ${JSON.stringify(body)}`);
     await this.validation(body.domain, body.name);
 
     // TODO: 썸네일 업로드 로직 추가
     console.log(file);
+    console.log(token);
     body.thumbnailUrl = 'https://example.com/thumbnail.jpg';
 
     const inviteCode = this.generateInviteCode(body.domain);

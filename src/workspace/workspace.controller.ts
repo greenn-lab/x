@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@app/common/decorators/roles.decorator';
+import { Token } from '@app/common/decorators/token.decorator copy';
 import { User } from '@app/common/decorators/user.decorator';
 import { Workspace } from '@app/common/decorators/workspace.decorator';
 import { ResponseDto } from '@app/common/dto/response.dto';
@@ -62,11 +63,12 @@ export class WorkspaceController {
   @Roles(MemberRole.ADMIN)
   async create(
     @User() user: { pid: string },
+    @Token() token: string,
     @Body() body: CreateWorkspaceDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return ResponseDto.success(
-      await this.workspaceService.create(user.pid, body, file),
+      await this.workspaceService.create(user.pid, body, file, token),
     );
   }
 
@@ -139,7 +141,6 @@ export class WorkspaceController {
           type: 'string',
           format: 'binary',
         },
-        token: { type: 'string' },
       },
     },
   })
@@ -147,11 +148,11 @@ export class WorkspaceController {
   @Roles(MemberRole.OWNER)
   updateThumbnail(
     @Param('workspaceId') workspaceId: string,
-    @Body() body: { file: Express.Multer.File; token: string },
+    @Token() token: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return ResponseDto.success(
-      this.workspaceService.updateThumbnail(workspaceId, file, body.token),
+      this.workspaceService.updateThumbnail(workspaceId, file, token),
     );
   }
 }

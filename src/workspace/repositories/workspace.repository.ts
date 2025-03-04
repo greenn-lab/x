@@ -24,7 +24,21 @@ export class WorkspaceRepository extends Repository<Workspace> {
 
     const [workspaces, total] = await this.createQueryBuilder('workspace')
       .leftJoinAndSelect('workspace.config', 'config')
-      .select()
+      .leftJoinAndSelect('workspace.owner', 'owner')
+      .leftJoinAndSelect('owner.profile', 'profile')
+      .select([
+        'workspace.id',
+        'workspace.name',
+        'workspace.domain',
+        'workspace.createAt',
+        'workspace.description',
+        'config.memberMaxCount',
+        'config.ownerMaxCount',
+        'config.guestMaxCount',
+        'config.disableAt',
+        'owner.pid',
+        'profile.nickName',
+      ])
       .where('workspace.domain != :globalDomain', { globalDomain: 'global' })
       .andWhere(startDate ? 'workspace.createAt >= :startDate' : '1=1', {
         startDate: startDate ? new Date(`${startDate} 00:00:00`) : undefined,
