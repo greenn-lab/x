@@ -1,3 +1,5 @@
+import { HttpStatus } from '@nestjs/common';
+
 import {
   ResponseMessage,
   HttpStatusCode,
@@ -19,6 +21,14 @@ export class ResponseDto<T> implements BaseResponseType<T> {
     data: T,
     message = ResponseMessage.SUCCESS,
     httpCode = HttpStatusCode.OK,
+  ): ResponseDto<T> {
+    return new ResponseDto(message, httpCode, data);
+  }
+
+  static create<T>(
+    data: T,
+    message = ResponseMessage.SUCCESS,
+    httpCode = HttpStatus.CREATED,
   ): ResponseDto<T> {
     return new ResponseDto(message, httpCode, data);
   }

@@ -70,7 +70,7 @@ export class TemplateController {
       editorPID: user.pid,
     };
     const result = await this.templateService.createTemplate(data);
-    return ResponseDto.success(result);
+    return ResponseDto.create(result);
   }
 
   // 사용가능한 템플릿 모듈 조회
@@ -99,6 +99,7 @@ export class TemplateController {
     return ResponseDto.success(result);
   }
 
+  // 템플릿 수정
   @Put(':templateId')
   @Roles(MemberRole.OWNER)
   @ApiOperation({ summary: 'Update template' })
