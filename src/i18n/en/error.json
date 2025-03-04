@@ -1,0 +1,20 @@
+{
+    "validation": {
+        "isNotEmpty": "{property} is required.",
+        "isString": "{property} must be a string.",
+        "isNumber": "{property} must be a number.",
+        "isEmail": "Invalid email format.",
+        "minLength": "{property} must be at least {constraints.0} characters long.",
+        "maxLength": "{property} must be at most {constraints.0} characters long."
+    },
+    "auth": {
+        "invalidCredentials": "Invalid username or password.",
+        "tokenExpired": "Authentication token has expired.",
+        "invalidToken": "Invalid token."
+    },
+    "user": {
+        "notFound": "User not found.",
+        "alreadyExists": "User already exists.",
+        "emailAlreadyExists": "Email is already in use."
+    }
+}

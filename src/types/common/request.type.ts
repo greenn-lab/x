@@ -34,5 +34,7 @@ export interface AuthenticatedRequest extends Request {
         domain?: string;
       };
     };
+    kms?: string;
   };
+  token?: string;
 }

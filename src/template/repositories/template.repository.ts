@@ -3,10 +3,19 @@ import { InjectModel } from '@nestjs/mongoose';
 
 import { Model } from 'mongoose';
 
+import {
+  transformMongoDocument,
+  transformMongoDocuments,
+} from '@app/common/utils/transform-mongo.util';
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import {
+  OptionsDto,
+  UpdateTemplateDtoPlus,
+} from '@app/template/dto/update-template.dto';
 import { TemplateRevision } from '@app/template/schemas/template-revision.schema';
 import { Template } from '@app/template/schemas/template.schema';
+import { YesNo } from '@app/types/common/base.type';
 
 @Injectable()
 export class TemplateRepository {
@@ -25,7 +34,7 @@ export class TemplateRepository {
   async getTemplates(
     workspaceId: string,
     options: GetTemplatesDto,
-  ): Promise<{ _count: number; templates: Template[] }> {
+  ): Promise<{ _count: number; templates }> {
     const query = { workspaceId };
 
     if (options.isUsed) {
@@ -35,25 +44,21 @@ export class TemplateRepository {
       query['isDeleted'] = options.isDeleted;
     }
 
-    const [templates, _count] = await Promise.all([
-      this.template
-        .find(query)
-        .lean()
-        .sort({ isUsed: -1, updatedAt: -1 })
-        .exec(),
+    const [templatesResult, _count] = await Promise.all([
+      this.template.find(query).sort({ isUsed: -1, updatedAt: -1 }).lean(),
       this.template.countDocuments(query),
     ]);
 
-    return {
-      _count,
-      templates,
-    };
+    const templates = transformMongoDocuments(templatesResult);
+
+    return { _count, templates };
   }
+
   // 템플릿 생성
   async createTemplate(data: CreateTemplateDtoPlus): Promise<Template> {
     const session = await this.template.startSession();
     try {
-      const templateDoc = await session.withTransaction(async () => {
+      const templateDoc: Template = await session.withTransaction(async () => {
         const newTemplate = new this.template({ ...data });
 
         if (!newTemplate) {
@@ -80,5 +85,91 @@ export class TemplateRepository {
     } finally {
       await session.endSession();
     }
+  }
+
+  // 템플릿 상세 조회
+  async getTemplateDetail(workspaceId: string, templateId: string) {
+    const template = await this.template
+      .findOne({
+        workspaceId,
+        _id: templateId,
+      })
+      .lean()
+      .exec();
+
+    if (!template) {
+      return null;
+    }
+
+    return transformMongoDocument(template);
+  }
+
+  // 템플릿 수정
+  async updateTemplate(templateId: string, dto: UpdateTemplateDtoPlus) {
+    const { preview, ...updateData } = dto;
+    const session = await this.template.startSession();
+
+    try {
+      let updatedTemplate: Template | null = null;
+
+      await session.withTransaction(async () => {
+        // findOneAndUpdate를 사용하여 템플릿 업데이트
+        updatedTemplate = await this.template
+          .findOneAndUpdate(
+            { _id: templateId },
+            { $set: { ...updateData, preview } },
+            { new: true, session },
+          )
+          .lean();
+
+        if (!updatedTemplate) {
+          throw new Error(`템플릿 ID ${templateId}를 찾을 수 없습니다.`);
+        }
+
+        // 새 리비전 생성
+        const newRevision = new this.templateRevision({
+          ...updateData,
+          templateId,
+        });
+
+        await newRevision.save({ session });
+      });
+
+      // 세션 종료 후 변환된 문서 반환
+      await session.endSession();
+
+      if (!updatedTemplate) {
+        throw new Error(`수정에 실패하였습니다`);
+      }
+
+      console.log('updatedTemplate', updatedTemplate);
+
+      return transformMongoDocument(updatedTemplate);
+    } catch (error) {
+      console.error('템플릿 업데이트 중 오류 발생:', error);
+      await session.endSession();
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('알 수 없는 오류가 발생했습니다');
+    }
+  }
+
+  // 템플릿 사용 여부 수정
+  async updateTemplateStatus(templateId: string, options: OptionsDto) {
+    const { isUsed, isDeleted } = options;
+    const data: Record<string, YesNo> = {};
+    if (isUsed) {
+      data['isUsed'] = isUsed as YesNo;
+    }
+    if (isDeleted) {
+      data['isDeleted'] = isDeleted as YesNo;
+    }
+
+    const result = await this.template
+      .findOneAndUpdate({ _id: templateId }, { $set: data }, { new: true })
+      .lean();
+
+    return result ? transformMongoDocument(result) : null;
   }
 }

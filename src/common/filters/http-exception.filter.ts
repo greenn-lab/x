@@ -1,20 +1,55 @@
-import { ExceptionFilter, Catch, ArgumentsHost } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  Logger,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { I18nService } from 'nestjs-i18n';
 
-import { ResponseMessage } from '@app/common/constants/response.constant';
-import { ResponseDto } from '@app/common/dto/response.dto';
+import { HttpStatusCode } from '@app/common/constants/response.constant';
+import { ResponseErrorDto } from '@app/common/dto/response-error.dto';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
+
+  constructor(
+    private readonly i18n: I18nService,
+    private readonly config: ConfigService,
+  ) {}
+
+  //
   catch(error: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+    const lang = request.headers['accept-language'] || 'ko';
 
-    const errorResponse = ResponseDto.error(
-      error instanceof Error ? error.message : ResponseMessage.UNKNOWN_ERROR,
-    );
+    this.loggingForDebug(error);
 
-    response.status(errorResponse.httpCode).json(errorResponse);
+    if (error instanceof HttpException) {
+      const status = error.getStatus();
+
+      response
+        .status(status)
+        .json(
+          ResponseErrorDto.error(
+            this.i18n.translate(error.message, { lang }) || error.message,
+            status,
+          ),
+        );
+    } else {
+      response.status(HttpStatusCode.NO).json(ResponseErrorDto.error());
+    }
+  }
+
+  private loggingForDebug(error: Error) {
+    if (this.config.get('NODE_ENV') !== 'production') {
+      this.logger.error(error.stack);
+    }
   }
 }

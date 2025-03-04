@@ -25,3 +25,7 @@ export interface TemplateWithUsernames
   creator?: string;
   editor?: string;
 }
+
+export interface TemplateDetail extends Template {
+  modules?: Module[];
+}

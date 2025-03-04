@@ -65,4 +65,14 @@ export class MemberRepository extends Repository<Member> {
       .where('profile.email = :email', { email })
       .getOne();
   }
+
+  async findByPid(pid: string) {
+    return await this.createQueryBuilder('member')
+      .leftJoinAndSelect('member.user', 'user')
+      .leftJoinAndSelect('member.workspace', 'workspace')
+      .leftJoinAndSelect('user.profile', 'profile')
+      .select(PROJECTION)
+      .where('user.pid = :pid', { pid })
+      .getOne();
+  }
 }
