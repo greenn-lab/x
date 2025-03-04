@@ -6,6 +6,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WinstonModule } from 'nest-winston';
 
 import { AppModule } from '@app/app.module';
+import { ENVIRONMENT } from '@app/common/constants/environment.constant';
 import { createWinstonConfig } from '@app/config/winston.config';
 
 async function bootstrap() {
@@ -16,7 +17,7 @@ async function bootstrap() {
     WinstonModule.createLogger(
       createWinstonConfig(
         configService.get<string>('PROJECT_NAME') ?? 'a.biz',
-        configService.get<string>('NODE_ENV') ?? 'dev',
+        configService.get<string>('NODE_ENV') ?? ENVIRONMENT.DEVELOPMENT,
       ),
     ),
   );
