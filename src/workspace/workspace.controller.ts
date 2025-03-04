@@ -14,7 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@app/common/decorators/roles.decorator';
-import { Token } from '@app/common/decorators/token.decorator copy';
+import { Token } from '@app/common/decorators/token.decorator';
 import { User } from '@app/common/decorators/user.decorator';
 import { Workspace } from '@app/common/decorators/workspace.decorator';
 import { ResponseDto } from '@app/common/dto/response.dto';
