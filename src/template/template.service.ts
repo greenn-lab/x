@@ -119,7 +119,7 @@ export class TemplateService {
     }
   }
 
-  async createTemplate(dto: CreateTemplateDtoPlus): Promise<Template> {
+  async createTemplate(dto: CreateTemplateDtoPlus) {
     try {
       this.logger.log('템플릿 생성 시작');
       const { template, workspaceId } = dto;

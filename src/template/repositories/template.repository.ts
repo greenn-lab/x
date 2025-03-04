@@ -55,7 +55,7 @@ export class TemplateRepository {
   }
 
   // 템플릿 생성
-  async createTemplate(data: CreateTemplateDtoPlus): Promise<Template> {
+  async createTemplate(data: CreateTemplateDtoPlus) {
     const session = await this.template.startSession();
     try {
       const templateDoc: Template = await session.withTransaction(async () => {
@@ -72,10 +72,20 @@ export class TemplateRepository {
         await newTemplate.save({ session });
         await newRevision.save({ session });
 
-        return newTemplate;
+        const savedTemplate = await this.template
+          .findById(newTemplate._id)
+          .session(session)
+          .lean()
+          .exec();
+
+        if (!savedTemplate) {
+          throw new Error('생성된 템플릿을 찾을 수 없습니다');
+        }
+
+        return savedTemplate;
       });
 
-      return templateDoc;
+      return transformMongoDocument(templateDoc);
     } catch (error) {
       console.error('트랜잭션 중 오류 발생:', error);
       if (error instanceof Error) {
@@ -141,8 +151,6 @@ export class TemplateRepository {
       if (!updatedTemplate) {
         throw new Error(`수정에 실패하였습니다`);
       }
-
-      console.log('updatedTemplate', updatedTemplate);
 
       return transformMongoDocument(updatedTemplate);
     } catch (error) {
