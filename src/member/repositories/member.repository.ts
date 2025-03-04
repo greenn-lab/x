@@ -75,4 +75,22 @@ export class MemberRepository extends Repository<Member> {
       .where('user.pid = :pid', { pid })
       .getOne();
   }
+
+  async findMemberCountByWorkspaceId(workspaceId: string) {
+    const result = await this.createQueryBuilder('member')
+      .select(['member.role AS role', 'COUNT(member.id) AS count'])
+      .where('member.workspaceId = :workspaceId', { workspaceId })
+      .groupBy('member.role')
+      .getRawMany<{ role: string; count: string }>();
+
+    return result
+      .filter(({ role }) => role !== 'ADMIN')
+      .reduce(
+        (acc, { role, count }) => {
+          acc[role] = Number(count);
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+  }
 }
