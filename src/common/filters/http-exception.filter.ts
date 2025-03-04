@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 import { I18nService } from 'nestjs-i18n';
 
+import { ENVIRONMENT } from '@app/common/constants/environment.constant';
 import { HttpStatusCode } from '@app/common/constants/response.constant';
 import { ResponseErrorDto } from '@app/common/dto/response-error.dto';
 
@@ -48,7 +49,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   private loggingForDebug(error: Error) {
-    if (this.config.get('NODE_ENV') !== 'production') {
+    if (this.config.get('NODE_ENV') !== ENVIRONMENT.PRODUCTION) {
       this.logger.error(error.stack);
     }
   }
