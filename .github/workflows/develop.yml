@@ -64,10 +64,10 @@ jobs:
           echo "DB_HOST=${{ secrets.DB_HOSTNAME }}" >> .env
           echo "DB_PORT=${{ secrets.DB_HOSTPORT }}" >> .env
           echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_PASSWORD=\"${{ secrets.DB_PASSWORD }}\"" >> .env
           echo "DB_DATABASE=${{ vars.DB_DATABASE }}" >> .env
-          echo "MONGO_URI=${{ secrets.MONGODB_URI }}" >> .env
-          echo "MONGO_DATABASE=${{ vars.MONGODB_DATABASE }}" >> .env
+          echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+          echo "MONGODB_DATABASE=${{ vars.MONGODB_DATABASE }}" >> .env
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
