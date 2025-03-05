@@ -1,6 +1,10 @@
 import * as crypto from 'crypto';
 
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+
+import axios from 'axios';
+import * as FormData from 'form-data';
 
 import { MemberRepository } from '@app/member/repositories/member.repository';
 import { CreateWorkspaceDto } from '@app/workspace/dto/create-workspace.dto';
@@ -15,6 +19,7 @@ export class WorkspaceService {
   private readonly logger = new Logger(WorkspaceService.name);
 
   constructor(
+    private readonly config: ConfigService,
     private readonly workspaceRepository: WorkspaceRepository,
     private readonly workspaceConfigRepository: WorkspaceConfigRepository,
     private readonly memberRepository: MemberRepository,
@@ -57,10 +62,6 @@ export class WorkspaceService {
     return await this.workspaceRepository.createWorkspace(pid, body);
   }
 
-  private generateInviteCode(domain: string): string {
-    return crypto.createHash('sha256').update(domain).digest('hex').slice(0, 6);
-  }
-
   async delete(workspaceId: string) {
     this.logger.debug(`Deleting workspace ${workspaceId}`);
     return this.workspaceRepository.deleteWorkspace(workspaceId);
@@ -90,15 +91,6 @@ export class WorkspaceService {
     return this.workspaceRepository.findWorkspaceById(workspaceId);
   }
 
-  private checkMaxCount(
-    role: string,
-    maxCount: number | undefined,
-    currentCount: number,
-  ) {
-    if (maxCount !== undefined && currentCount > maxCount)
-      throw new Error(`${role} count exceeds the maximum allowed`);
-  }
-
   async updateWorkspaceName(workspaceId: string, body: { name: string }) {
     this.logger.debug(`workspace [${workspaceId}] updateName Start`);
     const existingWorkspaces = await this.workspaceRepository.find({
@@ -124,6 +116,67 @@ export class WorkspaceService {
     return 'Available for use.';
   }
 
+  async updateThumbnail(
+    workspaceId: string,
+    file: Express.Multer.File,
+    token: string,
+  ) {
+    this.logger.debug(`workspace [${workspaceId}] updateThumbnail Start`);
+
+    const url = await this.uploadWorkspaceThumbnail(file, token);
+
+    // TODO: url db update
+    console.log('thumbnail url', url);
+  }
+
+  private async uploadWorkspaceThumbnail(
+    file: Express.Multer.File,
+    token: string,
+  ) {
+    const formData = new FormData();
+    formData.append('type', 'workspace');
+    formData.append('image', file.buffer, {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    });
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      ...formData.getHeaders(),
+    };
+
+    try {
+      const {
+        data: { data: url },
+      } = await axios.request<{ data: string }>({
+        headers,
+        method: 'POST',
+        maxBodyLength: Infinity,
+        url:
+          this.config.get<string>('HOME_URL', '') +
+          this.config.get<string>('THUMBNAIL_UPLOAD_URL', ''),
+        data: formData,
+      });
+
+      return url;
+    } catch {
+      throw new HttpException('Upload Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  private generateInviteCode(domain: string): string {
+    return crypto.createHash('sha256').update(domain).digest('hex').slice(0, 6);
+  }
+
+  private checkMaxCount(
+    role: string,
+    maxCount: number | undefined,
+    currentCount: number,
+  ) {
+    if (maxCount !== undefined && currentCount > maxCount)
+      throw new Error(`${role} count exceeds the maximum allowed`);
+  }
+
   private isValidDomainFormat(domain: string): boolean {
     const domainRegex = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
     return domainRegex.test(domain);
@@ -140,16 +193,5 @@ export class WorkspaceService {
       throw new Error('Domain already exists');
     if (existingWorkspace.name === name) throw new Error('Name already exists');
     throw new Error('Domain or name already exists');
-  }
-
-  updateThumbnail(
-    workspaceId: string,
-    file: Express.Multer.File,
-    token: string,
-  ) {
-    this.logger.debug(`workspace [${workspaceId}] updateThumbnail Start`);
-
-    // TODO: 썸네일 업로드 로직 추가
-    console.log(workspaceId, file, token);
   }
 }

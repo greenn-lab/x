@@ -133,17 +133,6 @@ export class WorkspaceController {
   @Put(':workspaceId/thumbnail')
   @ApiOperation({ summary: '워크스페이스 썸네일 업데이트' })
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
   @UseInterceptors(FileInterceptor('file'))
   @Roles(MemberRole.OWNER)
   updateThumbnail(
@@ -151,6 +140,8 @@ export class WorkspaceController {
     @Token() token: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    console.log('Check #1');
+
     return ResponseDto.success(
       this.workspaceService.updateThumbnail(workspaceId, file, token),
     );
