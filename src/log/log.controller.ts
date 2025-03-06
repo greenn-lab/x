@@ -14,6 +14,6 @@ export class LogController {
   @ApiOperation({ summary: '클라이언트 에러 로그 생성' })
   async createClientErrorLog(@Body() logData: CreateLogDto) {
     const result = await this.logService.createClientErrorLog(logData);
-    return new ResponseDto('Success', 201, result);
+    return ResponseDto.create(result);
   }
 }

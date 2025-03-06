@@ -1,4 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { Model } from 'mongoose';
@@ -24,7 +29,7 @@ export class LogService {
       const newLog = new this.logRepository(errorLogs);
       const result = await newLog.save();
       if (!result) {
-        throw new Error('클라이언트 로그 생성 실패');
+        throw new InternalServerErrorException('클라이언트 로그 생성 실패');
       }
 
       this.logger.log('클라이언트 로그 생성 완료');
@@ -32,7 +37,10 @@ export class LogService {
       return result;
     } catch (error) {
       this.logger.error('클라이언트 로그 생성 실패', error);
-      throw new Error('클라이언트 로그 생성 실패');
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('클라이언트 로그 생성 실패');
     }
   }
 }
