@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@app/common/decorators/roles.decorator';
+import { Token } from '@app/common/decorators/token.decorator';
 import { User } from '@app/common/decorators/user.decorator';
 import { Workspace } from '@app/common/decorators/workspace.decorator';
 import { ResponseDto } from '@app/common/dto/response.dto';
@@ -62,11 +63,12 @@ export class WorkspaceController {
   @Roles(MemberRole.ADMIN)
   async create(
     @User() user: { pid: string },
+    @Token() token: string,
     @Body() body: CreateWorkspaceDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return ResponseDto.success(
-      await this.workspaceService.create(user.pid, body, file),
+      await this.workspaceService.create(user.pid, body, file, token),
     );
   }
 
@@ -131,6 +133,8 @@ export class WorkspaceController {
   @Put(':workspaceId/thumbnail')
   @ApiOperation({ summary: '워크스페이스 썸네일 업데이트' })
   @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @Roles(MemberRole.OWNER)
   @ApiBody({
     schema: {
       type: 'object',
@@ -138,20 +142,18 @@ export class WorkspaceController {
         file: {
           type: 'string',
           format: 'binary',
+          description: '썸네일 이미지 파일',
         },
-        token: { type: 'string' },
       },
     },
   })
-  @UseInterceptors(FileInterceptor('file'))
-  @Roles(MemberRole.OWNER)
-  updateThumbnail(
+  async updateThumbnail(
     @Param('workspaceId') workspaceId: string,
-    @Body() body: { file: Express.Multer.File; token: string },
+    @Token() token: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     return ResponseDto.success(
-      this.workspaceService.updateThumbnail(workspaceId, file, body.token),
+      await this.workspaceService.updateThumbnail(workspaceId, file, token),
     );
   }
 }

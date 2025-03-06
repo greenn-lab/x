@@ -46,10 +46,10 @@ export class RolesGuard implements CanActivate {
 
   private checkRole(requiredRole: MemberRole, userRole: MemberRole): boolean {
     switch (requiredRole) {
-      case MemberRole.OWNER:
-        return [MemberRole.OWNER].includes(userRole);
       case MemberRole.ADMIN:
-        return [MemberRole.OWNER, MemberRole.ADMIN].includes(userRole);
+        return [MemberRole.ADMIN].includes(userRole);
+      case MemberRole.OWNER:
+        return [MemberRole.ADMIN, MemberRole.OWNER].includes(userRole);
       case MemberRole.MEMBER:
         return [MemberRole.OWNER, MemberRole.ADMIN, MemberRole.MEMBER].includes(
           userRole,
