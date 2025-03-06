@@ -1,11 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  BadRequestException,
+  HttpException,
+} from '@nestjs/common';
 
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
 import {
-  OptionsDto,
-  UpdateTemplateDtoPlus,
-} from '@app/template/dto/update-template.dto';
+  StatusDto,
+  UpdateTemplateStatusResponseDto,
+} from '@app/template/dto/update-template-status.dto';
+import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
 import { TemplateModuleRepository } from '@app/template/repositories/template-module.repository';
 import { TemplateRepository } from '@app/template/repositories/template.repository';
 import { Template } from '@app/template/schemas/template.schema';
@@ -109,17 +117,24 @@ export class TemplateService {
         await this.templateRepository.getUsingTemplateCount(workspaceId);
 
       if (usingTemplateCount >= 10) {
-        throw new Error(
+        throw new BadRequestException(
           '사용중인 템플릿이 10개를 초과하여 등록할 수 없습니다.',
         );
       }
     } catch (error) {
       this.logger.error('사용 중인 템플릿 개수 조회 중 에러', error);
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        '사용 중인 템플릿 개수 조회 중 에러',
+      );
     }
   }
 
-  async createTemplate(dto: CreateTemplateDtoPlus) {
+  async createTemplate(
+    dto: CreateTemplateDtoPlus,
+  ): Promise<{ templateId: string }> {
     try {
       this.logger.log('템플릿 생성 시작');
       const { template, workspaceId } = dto;
@@ -129,23 +144,24 @@ export class TemplateService {
 
       const checked = await this.templateProcessor.checkTemplate(
         workspaceId,
-        template as Module[],
+        template,
       );
 
       if (!checked) {
-        throw new Error('약속한 타임으로 구성하여 요청해주세요');
+        throw new BadRequestException('약속한 타입으로 구성하여 요청해주세요');
       }
 
-      const preview = this.templateProcessor.processTemplate(
-        template as Module[],
-      );
+      const preview = this.templateProcessor.processTemplate(template);
 
       const newDto = { ...dto, preview };
       this.logger.log('템플릿 생성 완료');
       return await this.templateRepository.createTemplate(newDto);
     } catch (error) {
       this.logger.error('템플릿 생성 중 에러', error);
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('템플릿 생성 중 에러');
     }
   }
 
@@ -153,7 +169,7 @@ export class TemplateService {
   async getTemplateDetail(
     workspaceId: string,
     templateId: string,
-    isModules: YesNo,
+    isModules?: YesNo,
   ) {
     try {
       this.logger.log('템플릿 상세 조회 시작');
@@ -163,7 +179,7 @@ export class TemplateService {
       );
 
       if (!templateInfo) {
-        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+        throw new NotFoundException('해당 Id에 따른 템플릿을 찾을 수 없습니다');
       }
 
       const [result] = await this.replacePIDsWithNicknames([
@@ -179,7 +195,10 @@ export class TemplateService {
       }
     } catch (error) {
       this.logger.error('템플릿 상세 조회 중 에러', error);
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('템플릿 상세 조회 중 에러');
     }
   }
 
@@ -195,7 +214,7 @@ export class TemplateService {
       );
 
       if (!templateInfo) {
-        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+        throw new NotFoundException('해당 Id에 따른 템플릿을 찾을 수 없습니다');
       }
 
       dto.preview = this.templateProcessor.processTemplate(template);
@@ -206,7 +225,7 @@ export class TemplateService {
       );
 
       if (!result) {
-        throw new Error('템플릿 수정에 실패했습니다');
+        throw new BadRequestException('템플릿 수정에 실패했습니다');
       }
 
       this.logger.log('템플릿 수정 완료');
@@ -214,7 +233,10 @@ export class TemplateService {
       return result;
     } catch (error) {
       this.logger.error('템플릿 수정 중 에러', error);
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('템플릿 수정 중 에러');
     }
   }
 
@@ -222,12 +244,12 @@ export class TemplateService {
   async updateTemplateStatus(
     workspaceId: string,
     templateId: string,
-    options: OptionsDto,
+    statusDto?: StatusDto,
   ) {
     try {
       this.logger.log('템플릿 사용 여부 수정 시작');
 
-      if (options.isUsed === YesNo.Y) {
+      if (statusDto?.isUsed === YesNo.Y) {
         await this.checkUsingTemplateCount(workspaceId);
       }
 
@@ -237,33 +259,45 @@ export class TemplateService {
       );
 
       if (!templateInfo) {
-        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+        throw new NotFoundException('해당 Id에 따른 템플릿을 찾을 수 없습니다');
       }
 
       if (templateInfo.isDeleted === YesNo.Y) {
-        throw new Error('삭제된 템플릿은 사용 여부 수정이 불가능합니다');
+        throw new BadRequestException('이미 삭제된 템플릿 입니다');
       }
 
-      const result = await this.templateRepository.updateTemplateStatus(
+      const result = await this.templateRepository.updateTemplateStatus({
         templateId,
-        options,
-      );
+        isUsed: statusDto?.isUsed,
+        isDeleted: statusDto?.isDeleted,
+      });
 
       if (!result) {
-        throw new Error('템플릿 사용 여부 수정에 실패했습니다');
+        throw new BadRequestException('템플릿 사용 여부 수정에 실패했습니다');
       }
 
       this.logger.log('템플릿 사용 여부 수정 완료');
 
-      return result;
+      const responseDto: UpdateTemplateStatusResponseDto = {
+        templateId: result.id,
+        isUsed: result.isUsed as YesNo,
+        isDeleted: result.isDeleted as YesNo,
+      };
+      return responseDto;
     } catch (error) {
       this.logger.error('템플릿 사용 여부 수정 중 에러', error);
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('템플릿 사용 여부 수정 중 에러');
     }
   }
 
   // 템플릿 삭제
-  async deleteTemplate(workspaceId: string, templateId: string) {
+  async deleteTemplate(
+    workspaceId: string,
+    templateId: string,
+  ): Promise<UpdateTemplateStatusResponseDto> {
     try {
       this.logger.log('템플릿 삭제 시작');
 
@@ -273,28 +307,36 @@ export class TemplateService {
       );
 
       if (!templateInfo) {
-        throw new Error('해당 Id에 따른 템플릿을 찾을 수 없습니다');
+        throw new NotFoundException('해당 Id에 따른 템플릿을 찾을 수 없습니다');
       }
 
       if (templateInfo.isDeleted === YesNo.Y) {
-        throw new Error('이미 삭제된 템플릿입니다');
+        throw new BadRequestException('이미 삭제된 템플릿입니다');
       }
 
-      const result = await this.templateRepository.updateTemplateStatus(
+      const result = await this.templateRepository.updateTemplateStatus({
         templateId,
-        { isDeleted: YesNo.Y },
-      );
+        isDeleted: YesNo.Y,
+      });
 
       if (!result) {
-        throw new Error('템플릿 삭제에 실패했습니다');
+        throw new BadRequestException('템플릿 삭제에 실패했습니다');
       }
 
       this.logger.log('템플릿 삭제 완료');
-
-      return result;
+      const { id, isUsed, isDeleted } = result;
+      const responseDto: UpdateTemplateStatusResponseDto = {
+        templateId: id,
+        isUsed: isUsed as YesNo,
+        isDeleted: isDeleted as YesNo,
+      };
+      return responseDto;
     } catch (error) {
       this.logger.error('템플릿 삭제 중 에러', error);
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
     }
+    throw new InternalServerErrorException('템플릿 삭제 중 에러');
   }
 }

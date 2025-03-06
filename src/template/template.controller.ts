@@ -10,7 +10,14 @@ import {
   Query,
   // UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
+  ApiQuery,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { Roles } from '@app/common/decorators/roles.decorator';
 import { User } from '@app/common/decorators/user.decorator';
@@ -22,8 +29,8 @@ import {
   CreateTemplateDtoPlus,
 } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
+import { StatusDto } from '@app/template/dto/update-template-status.dto';
 import {
-  OptionsDto,
   UpdateTemplateDto,
   UpdateTemplateDtoPlus,
 } from '@app/template/dto/update-template.dto';
@@ -41,6 +48,7 @@ export class TemplateController {
   @Get()
   @Roles(MemberRole.MEMBER)
   @ApiOperation({ summary: 'Get all templates' })
+  @ApiResponse({ status: 200 })
   async getTemplates(
     @Workspace() workspace: { id: string },
     @Query() options: GetTemplatesDto,
@@ -58,6 +66,8 @@ export class TemplateController {
   @Post()
   @Roles(MemberRole.OWNER)
   @ApiOperation({ summary: 'Create template' })
+  @ApiBody({ type: CreateTemplateDto })
+  @ApiResponse({ status: 201 })
   async createTemplate(
     @Workspace() workspace: { id: string },
     @User() user: { pid: string },
@@ -77,19 +87,43 @@ export class TemplateController {
   @Get('module')
   @Roles(MemberRole.OWNER)
   @ApiOperation({ summary: 'Get module set for making template' })
+  @ApiResponse({ status: 200 })
   async getTemplateModules(@Workspace() workspace: { id: string }) {
     const result = await this.templateService.getTemplateModules(workspace.id);
     return ResponseDto.success(result);
   }
 
   // 템플릿 상세 조회
+  @ApiQuery({
+    name: 'isModules',
+    required: false,
+    type: String,
+    enum: YesNo,
+    default: YesNo.N,
+    description: '(수정 페이지) 모듈 동시 조회 여부',
+  })
+  @ApiParam({
+    name: 'templateId',
+    required: true,
+    type: String,
+    description: '템플릿 ID',
+  })
   @Get(':templateId')
   @Roles(MemberRole.MEMBER)
   @ApiOperation({ summary: 'Get template detail' })
+  @ApiQuery({
+    name: 'isModules',
+    required: false,
+    type: String,
+    enum: YesNo,
+    default: YesNo.N,
+    description: '(수정 페이지) 모듈 동시 조회 여부',
+  })
+  @ApiResponse({ status: 200 })
   async getTemplateDetail(
     @Workspace() workspace: { id: string },
     @Param('templateId') templateId: string,
-    @Query('isModules') isModules: YesNo,
+    @Query('isModules') isModules?: YesNo,
   ) {
     const result = await this.templateService.getTemplateDetail(
       workspace.id,
@@ -103,6 +137,8 @@ export class TemplateController {
   @Put(':templateId')
   @Roles(MemberRole.OWNER)
   @ApiOperation({ summary: 'Update template' })
+  @ApiBody({ type: UpdateTemplateDto })
+  @ApiResponse({ status: 200 })
   async updateTemplate(
     @Workspace() workspace: { id: string },
     @Param('templateId') templateId: string,
@@ -123,15 +159,16 @@ export class TemplateController {
   @Patch(':templateId/status')
   @Roles(MemberRole.OWNER)
   @ApiOperation({ summary: 'Update template status' })
+  @ApiResponse({ status: 200 })
   async updateTemplateStatus(
     @Workspace() workspace: { id: string },
     @Param('templateId') templateId: string,
-    @Query() options: OptionsDto,
+    @Query() statusDto: StatusDto,
   ) {
     const result = await this.templateService.updateTemplateStatus(
       workspace.id,
       templateId,
-      options,
+      statusDto,
     );
     return ResponseDto.success(result);
   }
@@ -140,6 +177,7 @@ export class TemplateController {
   @Delete(':templateId')
   @Roles(MemberRole.OWNER)
   @ApiOperation({ summary: 'Delete template' })
+  @ApiResponse({ status: 200 })
   async deleteTemplate(
     @Workspace() workspace: { id: string },
     @Param('templateId') templateId: string,

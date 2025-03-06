@@ -28,7 +28,8 @@ export class TemplateModuleRepository {
   async createTemplateModules(data: {
     workspaceId: string;
     modules: Module[];
-  }): Promise<TemplateModule> {
-    return await this.templateModule.create(data);
+  }) {
+    const result = await this.templateModule.create(data);
+    return transformMongoDocument(result);
   }
 }

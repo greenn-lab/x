@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import {
   IsArray,
@@ -11,6 +11,7 @@ import {
 import { YesNo } from '@app/types/common/base.type';
 import { Module } from '@app/types/template/template.type';
 
+// 요청 DTO
 export class CreateTemplateDto {
   @ApiProperty({
     description: '제목란',
@@ -92,6 +93,12 @@ export class CreateTemplateDto {
     default: '',
     required: false,
   })
+  @ApiPropertyOptional({
+    description: '버전 정보',
+    example: '1.0.1',
+    default: '',
+    required: false,
+  })
   @IsOptional()
   @IsString()
   version?: string;
@@ -122,4 +129,8 @@ export interface CreateTemplateDtoPlus extends CreateTemplateDto {
   workspaceId: string;
   creatorPID: string;
   editorPID: string;
+}
+
+export interface CreateTemplateResponseDto {
+  templateId: string;
 }

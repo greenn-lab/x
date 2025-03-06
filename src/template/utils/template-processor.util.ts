@@ -3,6 +3,8 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { TemplateService } from '@app/template/template.service';
 import { Module, ModuleItem } from '@app/types/template/template.type';
 
+// TemplateModule 스키마와 충돌을 피하기 위해 다른 이름 사용
+
 @Injectable()
 export class TemplateProcessorUtil {
   constructor(
@@ -10,7 +12,10 @@ export class TemplateProcessorUtil {
     private templateService: TemplateService,
   ) {}
 
-  async checkTemplate(workspaceId: string, modules: Module[]) {
+  async checkTemplate(
+    workspaceId: string,
+    modules: Module[],
+  ): Promise<boolean> {
     if (!Array.isArray(modules)) {
       return false;
     }
@@ -18,8 +23,13 @@ export class TemplateProcessorUtil {
     // 사용 가능한 모듈 키 검사
     const moduleSet =
       await this.templateService.getTemplateModules(workspaceId);
-    const usableModuleKeys = moduleSet.modules.map(
-      (module) => module.moduleKey,
+
+    if (!moduleSet || !moduleSet.modules || !Array.isArray(moduleSet.modules)) {
+      return false;
+    }
+
+    const usableModuleKeys: string[] = moduleSet.modules.map(
+      (module: Module) => module.moduleKey,
     );
 
     const invalidModuleKeys = modules
@@ -71,18 +81,21 @@ export class TemplateProcessorUtil {
 
   processTemplateToText(modules: Module[]): string {
     return modules
-      .map((module) => {
+      .map((module: Module) => {
         const basicItem = module.items[0];
         if (module.items.length === 1 && basicItem.type === 'basic') {
           return basicItem.value; // 기본 타입 문자열 반환
         }
-        return module.items.find((item) => item.type === 'loop')?.value || ''; // 문자열 반환
+        return (
+          module.items.find((item: ModuleItem) => item.type === 'loop')
+            ?.value || ''
+        ); // 문자열 반환
       }) // ["텍스트1", "", "텍스트2", "", "텍스트3"]
       .filter(Boolean) // 빈 문자열 및 null 제거 -> ["텍스트1", "텍스트2", "텍스트3"]
       .join('\n\n');
   }
 
-  processTemplate(modules: Module[]) {
+  processTemplate(modules: Module[]): string {
     const filledTemplate: Module[] = structuredClone(modules);
 
     return this.processTemplateToText(filledTemplate);
@@ -90,7 +103,22 @@ export class TemplateProcessorUtil {
 
   // 템플릿 샘플 모듈 조립
   assembleSampleModules(): Module[] {
-    const moduleConfig = {
+    interface BasicConfig {
+      key: string;
+      displayName: string;
+    }
+
+    interface LoopConfig {
+      keys: string[];
+      displayName: string;
+    }
+
+    interface ModuleConfig {
+      basic: BasicConfig[];
+      loop: Record<string, LoopConfig>;
+    }
+
+    const moduleConfig: ModuleConfig = {
       basic: [
         { key: 'title', displayName: '제목' },
         { key: 'tasks', displayName: '할 일' },
@@ -123,10 +151,10 @@ export class TemplateProcessorUtil {
     });
 
     // 루프 모듈 생성
-    const createTemplateFromKeys = (keys: string[]) =>
+    const createTemplateFromKeys = (keys: string[]): string =>
       keys.map((key) => `{{${key}}}`).join('\n');
 
-    Object.entries(moduleConfig.loop).map(([key, config]) =>
+    Object.entries(moduleConfig.loop).forEach(([key, config]) =>
       modules.push({
         index: moduleIndex++,
         moduleKey: key,

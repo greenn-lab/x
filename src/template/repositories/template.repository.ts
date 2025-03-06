@@ -9,14 +9,11 @@ import {
 } from '@app/common/utils/transform-mongo.util';
 import { CreateTemplateDtoPlus } from '@app/template/dto/create-template.dto';
 import { GetTemplatesDto } from '@app/template/dto/get-templates.dto';
-import {
-  OptionsDto,
-  UpdateTemplateDtoPlus,
-} from '@app/template/dto/update-template.dto';
+import { UpdateTemplateStatusDto } from '@app/template/dto/update-template-status.dto';
+import { UpdateTemplateDtoPlus } from '@app/template/dto/update-template.dto';
 import { TemplateRevision } from '@app/template/schemas/template-revision.schema';
 import { Template } from '@app/template/schemas/template.schema';
 import { YesNo } from '@app/types/common/base.type';
-
 @Injectable()
 export class TemplateRepository {
   constructor(
@@ -55,7 +52,9 @@ export class TemplateRepository {
   }
 
   // 템플릿 생성
-  async createTemplate(data: CreateTemplateDtoPlus) {
+  async createTemplate(
+    data: CreateTemplateDtoPlus,
+  ): Promise<{ templateId: string }> {
     const session = await this.template.startSession();
     try {
       const templateDoc: Template = await session.withTransaction(async () => {
@@ -85,7 +84,7 @@ export class TemplateRepository {
         return savedTemplate;
       });
 
-      return transformMongoDocument(templateDoc);
+      return { templateId: templateDoc._id.toString() };
     } catch (error) {
       console.error('트랜잭션 중 오류 발생:', error);
       if (error instanceof Error) {
@@ -164,14 +163,14 @@ export class TemplateRepository {
   }
 
   // 템플릿 사용 여부 수정
-  async updateTemplateStatus(templateId: string, options: OptionsDto) {
-    const { isUsed, isDeleted } = options;
+  async updateTemplateStatus(updateTemplateStatusDto: UpdateTemplateStatusDto) {
+    const { templateId, isUsed, isDeleted } = updateTemplateStatusDto;
     const data: Record<string, YesNo> = {};
     if (isUsed) {
-      data['isUsed'] = isUsed as YesNo;
+      data['isUsed'] = isUsed;
     }
     if (isDeleted) {
-      data['isDeleted'] = isDeleted as YesNo;
+      data['isDeleted'] = isDeleted;
     }
 
     const result = await this.template
