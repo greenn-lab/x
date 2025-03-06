@@ -51,18 +51,12 @@ export class WorkspaceService {
   ) {
     this.logger.debug(`Creating workspace ${JSON.stringify(body)}`);
     await this.validation(body.domain, body.name);
-
-    // TODO: 썸네일 업로드 로직 추가
-    console.log(file);
-    console.log(token);
-    body.thumbnailUrl = 'https://example.com/thumbnail.jpg';
-
-    const inviteCode = this.generateInviteCode(body.domain);
-    body.inviteCode = inviteCode;
-    return await this.workspaceRepository.createWorkspace(pid, body);
+    body.thumbnailUrl = await this.uploadThumbnail(file, token);
+    body.inviteCode = this.generateInviteCode(body.domain);
+    return this.workspaceRepository.createWorkspace(pid, body);
   }
 
-  async delete(workspaceId: string) {
+  delete(workspaceId: string) {
     this.logger.debug(`Deleting workspace ${workspaceId}`);
     return this.workspaceRepository.deleteWorkspace(workspaceId);
   }
@@ -122,46 +116,56 @@ export class WorkspaceService {
     token: string,
   ) {
     this.logger.debug(`workspace [${workspaceId}] updateThumbnail Start`);
-
-    const url = await this.uploadWorkspaceThumbnail(file, token);
-
-    // TODO: url db update
-    console.log('thumbnail url', url);
+    const thumbnailUrl = await this.uploadThumbnail(file, token);
+    return this.workspaceRepository.update(workspaceId, {
+      thumbnailUrl: thumbnailUrl,
+    });
   }
 
-  private async uploadWorkspaceThumbnail(
-    file: Express.Multer.File,
-    token: string,
-  ) {
+  private async uploadThumbnail(file: Express.Multer.File, token: string) {
+    const formData = this.createFormData(file);
+    const headers = this.createHeaders(token, formData);
+
+    try {
+      const url = await this.sendThumbnailUploadRequest(headers, formData);
+      return url;
+    } catch {
+      throw new HttpException('Upload Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+  private createFormData(file: Express.Multer.File): FormData {
     const formData = new FormData();
     formData.append('type', 'workspace');
     formData.append('image', file.buffer, {
       filename: file.originalname,
       contentType: file.mimetype,
     });
-
-    const headers = {
+    return formData;
+  }
+  private createHeaders(
+    token: string,
+    formData: FormData,
+  ): Record<string, string> {
+    return {
       Authorization: `Bearer ${token}`,
       ...formData.getHeaders(),
     };
-
-    try {
-      const {
-        data: { data: url },
-      } = await axios.request<{ data: string }>({
-        headers,
-        method: 'POST',
-        maxBodyLength: Infinity,
-        url:
-          this.config.get<string>('HOME_URL', '') +
-          this.config.get<string>('THUMBNAIL_UPLOAD_URL', ''),
-        data: formData,
-      });
-
-      return url;
-    } catch {
-      throw new HttpException('Upload Error', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  }
+  private async sendThumbnailUploadRequest(
+    headers: Record<string, string>,
+    formData: FormData,
+  ): Promise<string> {
+    const url =
+      this.config.get<string>('HOME_URL', '') +
+      this.config.get<string>('THUMBNAIL_UPLOAD_URL', '');
+    const response = await axios.request<{ data: string }>({
+      headers,
+      method: 'POST',
+      maxBodyLength: Infinity,
+      url,
+      data: formData,
+    });
+    return response.data.data;
   }
 
   private generateInviteCode(domain: string): string {

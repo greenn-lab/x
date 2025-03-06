@@ -135,15 +135,25 @@ export class WorkspaceController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @Roles(MemberRole.OWNER)
-  updateThumbnail(
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: '썸네일 이미지 파일',
+        },
+      },
+    },
+  })
+  async updateThumbnail(
     @Param('workspaceId') workspaceId: string,
     @Token() token: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    console.log('Check #1');
-
     return ResponseDto.success(
-      this.workspaceService.updateThumbnail(workspaceId, file, token),
+      await this.workspaceService.updateThumbnail(workspaceId, file, token),
     );
   }
 }
