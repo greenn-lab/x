@@ -23,7 +23,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     private readonly config: ConfigService,
   ) {}
 
-  //
   catch(error: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -34,17 +33,33 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (error instanceof HttpException) {
       const status = error.getStatus();
+      const exceptionResponse = error.getResponse();
+      let message = '';
+      let data: Record<string, any> | null = null;
 
-      response
-        .status(status)
-        .json(
-          ResponseErrorDto.error(
-            this.i18n.translate(error.message, { lang }) || error.message,
-            status,
-          ),
-        );
+      if (typeof exceptionResponse === 'object') {
+        const exceptionObj = exceptionResponse as Record<string, any>;
+
+        if ('message' in exceptionObj) {
+          message = this.i18n.translate(exceptionObj.message, { lang });
+        }
+
+        if ('data' in exceptionObj) {
+          data = exceptionObj.data as Record<string, any>;
+        }
+      } else if (typeof exceptionResponse === 'string') {
+        message = this.i18n.translate(exceptionResponse, { lang });
+      }
+
+      const errorResponse: ResponseErrorDto<typeof data> = {
+        message,
+        httpCode: status,
+        result: data,
+      };
+
+      return response.status(status).json(errorResponse);
     } else {
-      response.status(HttpStatusCode.NO).json(ResponseErrorDto.error());
+      return response.status(HttpStatusCode.NO).json(ResponseErrorDto.error());
     }
   }
 

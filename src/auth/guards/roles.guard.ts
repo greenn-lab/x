@@ -7,6 +7,10 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
+import {
+  ROLE_KEY,
+  IS_PUBLIC_KEY,
+} from '@app/common/constants/metadata.constant';
 import { MemberRole } from '@app/types/common/base.type';
 import { AuthenticatedRequest } from '@app/types/common/request.type';
 
@@ -15,8 +19,17 @@ export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isPublic) {
+      return true;
+    }
+
     const requiredRole = this.reflector.get<MemberRole>(
-      'role',
+      ROLE_KEY,
       context.getHandler(),
     );
 

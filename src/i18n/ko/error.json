@@ -17,12 +17,21 @@
     "alreadyExists": "이미 존재하는 사용자입니다.",
     "emailAlreadyExists": "이미 사용 중인 이메일입니다."
   },
+  "health": {
+    "checkFailed": "시스템 상태 확인에 실패했습니다.",
+    "memoryExceeded": "메모리 사용량이 임계값을 초과했습니다.",
+    "diskSpaceExceeded": "디스크 공간 사용량이 임계값을 초과했습니다.",
+    "databaseConnectionFailed": "데이터베이스 연결에 실패했습니다.",
+    "mongodbConnectionFailed": "MongoDB 연결에 실패했습니다.",
+    "serviceUnavailable": "서비스를 일시적으로 사용할 수 없습니다."
+  },
   "400": "Bad Request",
   "401": "Unauthorized",
   "403": "Forbidden",
   "404": "Not Found",
   "405": "Method Not Allowed",
   "500": "Internal Server Error",
+  "503": "Service Unavailable",
   "1000": "필수 파라미터가 부족합니다.",
   "1001": "1 미만의 페이지 정보는 없습니다.",
   "1002": "복호화 토큰 오류",

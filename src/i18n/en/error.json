@@ -1,20 +1,35 @@
 {
-    "validation": {
-        "isNotEmpty": "{property} is required.",
-        "isString": "{property} must be a string.",
-        "isNumber": "{property} must be a number.",
-        "isEmail": "Invalid email format.",
-        "minLength": "{property} must be at least {constraints.0} characters long.",
-        "maxLength": "{property} must be at most {constraints.0} characters long."
-    },
-    "auth": {
-        "invalidCredentials": "Invalid username or password.",
-        "tokenExpired": "Authentication token has expired.",
-        "invalidToken": "Invalid token."
-    },
-    "user": {
-        "notFound": "User not found.",
-        "alreadyExists": "User already exists.",
-        "emailAlreadyExists": "Email is already in use."
-    }
+  "validation": {
+    "isNotEmpty": "{property} is required.",
+    "isString": "{property} must be a string.",
+    "isNumber": "{property} must be a number.",
+    "isEmail": "Invalid email format.",
+    "minLength": "{property} must be at least {constraints.0} characters long.",
+    "maxLength": "{property} must be at most {constraints.0} characters long."
+  },
+  "auth": {
+    "invalidCredentials": "Invalid username or password.",
+    "tokenExpired": "Authentication token has expired.",
+    "invalidToken": "Invalid token."
+  },
+  "user": {
+    "notFound": "User not found.",
+    "alreadyExists": "User already exists.",
+    "emailAlreadyExists": "Email is already in use."
+  },
+  "health": {
+    "checkFailed": "System health check failed.",
+    "memoryExceeded": "Memory usage exceeded threshold.",
+    "diskSpaceExceeded": "Disk space usage exceeded threshold.",
+    "databaseConnectionFailed": "Database connection failed.",
+    "mongodbConnectionFailed": "MongoDB connection failed.",
+    "serviceUnavailable": "Service temporarily unavailable."
+  },
+  "400": "Bad Request",
+  "401": "Unauthorized",
+  "403": "Forbidden",
+  "404": "Not Found",
+  "405": "Method Not Allowed",
+  "500": "Internal Server Error",
+  "503": "Service Unavailable"
 }
