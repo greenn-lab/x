@@ -18,6 +18,7 @@ import { AuthGuard } from '@app/auth/guards/auth.guard';
 import { MemberGuard } from '@app/auth/guards/member.guard';
 import { RolesGuard } from '@app/auth/guards/roles.guard';
 import { ENVIRONMENT } from '@app/common/constants/environment.constant';
+import { HealthcheckController } from '@app/common/controllers/healthcheck.controller';
 import { HttpExceptionFilter } from '@app/common/filters/http-exception.filter';
 import { HttpLoggingInterceptor } from '@app/common/interceptors/http-logging.interceptor';
 import { ModuleLoader } from '@app/common/utils/module-loader.util';
@@ -57,7 +58,7 @@ import { validationSchema } from '@app/config/validation.config';
       loader: I18nJsonLoader,
     }),
   ],
-  controllers: [],
+  controllers: [HealthcheckController],
   providers: [
     {
       provide: APP_GUARD,
