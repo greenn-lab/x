@@ -46,12 +46,12 @@ export class WorkspaceService {
   async create(
     pid: string,
     body: CreateWorkspaceDto,
-    file: Express.Multer.File,
+    file: Express.Multer.File | undefined,
     token: string,
   ) {
     this.logger.debug(`Creating workspace ${JSON.stringify(body)}`);
     await this.validation(body.domain, body.name);
-    body.thumbnailUrl = await this.uploadThumbnail(file, token);
+    if (file) body.thumbnailUrl = await this.uploadThumbnail(file, token);
     body.inviteCode = this.generateInviteCode(body.domain);
     return this.workspaceRepository.createWorkspace(pid, body);
   }
@@ -123,6 +123,7 @@ export class WorkspaceService {
   }
 
   private async uploadThumbnail(file: Express.Multer.File, token: string) {
+    if (!file) return undefined;
     const formData = this.createFormData(file);
     const headers = this.createHeaders(token, formData);
 
