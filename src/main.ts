@@ -12,7 +12,13 @@ import { createWinstonConfig } from '@app/config/winston.config';
 export const SERVICE_PORT = 3000;
 
 async function bootstrap() {
-  const app = await NestFactory.create(await AppModule.registerAsync());
+  const app = await NestFactory.create(await AppModule.registerAsync(), {
+    cors: {
+      origin: '*',
+      allowedHeaders: '*',
+      methods: '*',
+    },
+  });
   const configService = app.get(ConfigService);
 
   app.useLogger(
