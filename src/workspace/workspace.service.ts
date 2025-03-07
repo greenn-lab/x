@@ -1,10 +1,10 @@
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import axios from 'axios';
-import * as FormData from 'form-data';
+import FormData from 'form-data';
 
 import { MemberRepository } from '@app/member/repositories/member.repository';
 import { CreateWorkspaceDto } from '@app/workspace/dto/create-workspace.dto';

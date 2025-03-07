@@ -1,4 +1,4 @@
-import * as path from 'node:path';
+import path from 'node:path';
 
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
