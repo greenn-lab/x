@@ -9,6 +9,8 @@ import { AppModule } from '@app/app.module';
 import { ENVIRONMENT } from '@app/common/constants/environment.constant';
 import { createWinstonConfig } from '@app/config/winston.config';
 
+export const SERVICE_PORT = 3000;
+
 async function bootstrap() {
   const app = await NestFactory.create(await AppModule.registerAsync());
   const configService = app.get(ConfigService);
@@ -49,7 +51,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? SERVICE_PORT);
 }
 
 bootstrap().catch((err: Error) => {

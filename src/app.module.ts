@@ -20,6 +20,7 @@ import { RolesGuard } from '@app/auth/guards/roles.guard';
 import { ENVIRONMENT } from '@app/common/constants/environment.constant';
 import { HttpExceptionFilter } from '@app/common/filters/http-exception.filter';
 import { HttpLoggingInterceptor } from '@app/common/interceptors/http-logging.interceptor';
+import { ConsulModule } from '@app/common/modules/consul.module';
 import { ModuleLoader } from '@app/common/utils/module-loader.util';
 import { getMongoConfig } from '@app/config/mongo.config';
 import { getRdbConfig } from '@app/config/rdb.config';
@@ -27,6 +28,7 @@ import { validationSchema } from '@app/config/validation.config';
 
 @Module({
   imports: [
+    ConsulModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [`.env.${process.env.NODE_ENV || 'local'}`, '.env'],
