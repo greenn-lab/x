@@ -98,12 +98,12 @@ jobs:
         run: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Stop existing container
+        continue-on-error: true
         run: |
           IS_HEALTHY=$(docker inspect --format='{{.State.Health.Status}}' ${{ env.PROJECT_ID }})
 
           echo "Service is... ${IS_HEALTHY}"
           docker rm -f ${{ env.PROJECT_ID }} || true
-        continue-on-error: true
 
       - name: Run container
         run: |
